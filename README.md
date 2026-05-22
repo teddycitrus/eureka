@@ -11,7 +11,7 @@
 <br />
 <div align="center">
   <h3 align="center">Eureka</h3>
-![](eurekaDemo.gif)
+<img width="800" height="450" alt="VideoProject10-ezgif com-optimize" src="https://github.com/user-attachments/assets/863d3d6c-ec14-4c50-9ada-aaddcd13d8d9" />
   <p align="center">
     Supply-chain risk intelligence with interactive voice agents
     <br />
