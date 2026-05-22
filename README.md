@@ -11,7 +11,7 @@
 <br />
 <div align="center">
   <h3 align="center">Eureka</h3>
-![](https://github.com/teddycitrus/eureka-iris/blob/main/eurekaDemo.gif)
+![](eurekaDemo.gif)
   <p align="center">
     Supply-chain risk intelligence with interactive voice agents
     <br />
