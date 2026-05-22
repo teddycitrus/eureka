@@ -11,8 +11,6 @@
 <br />
 <div align="center">
   <h3 align="center">Eureka</h3>
-<img width="800" height="450" alt="VideoProject10-ezgif com-optimize (2)" src="https://github.com/user-attachments/assets/58faa872-43bf-4980-9e53-598647b25670" />
-
   <p align="center">
     Supply-chain risk intelligence with interactive voice agents
     <br />
@@ -52,7 +50,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
+<img width="800" height="450" alt="VideoProject10-ezgif com-optimize (2)" src="https://github.com/user-attachments/assets/58faa872-43bf-4980-9e53-598647b25670" />
 Eureka is a supply-chain risk intelligence platform that surfaces vendor and supplier exposure through an interactive 3D globe and lets analysts drill into risk signals via AI-powered voice agents. Instead of sitting idle on a dashboard, Eureka actively scans for incidents and proactively briefs you + suggests next steps.
 
 Key capabilities:
