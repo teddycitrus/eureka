@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { bus } from "@/lib/events";
+import { guard, ok } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -9,44 +9,52 @@ const patchInput = z.object({
   status: z
     .enum(["on-track", "rerouted", "delayed", "held", "arrived"])
     .optional(),
-  waypoints: z.array(z.tuple([z.number(), z.number()])).optional(),
-  destLabel: z.string().optional(),
-  destLat: z.number().optional(),
-  destLng: z.number().optional(),
+  waypoints: z
+    .array(z.tuple([z.number().min(-90).max(90), z.number().min(-180).max(180)]))
+    .max(50)
+    .optional(),
+  destLabel: z.string().min(1).max(120).optional(),
+  destLat: z.number().min(-90).max(90).optional(),
+  destLng: z.number().min(-180).max(180).optional(),
   etaAt: z.string().datetime().nullable().optional(),
-  reason: z.string().optional(),
+  reason: z.string().max(500).optional(),
 });
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  const parsed = patchInput.safeParse(await req.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-  const { waypoints, etaAt, reason: _reason, ...rest } = parsed.data;
-  const updated = await db.shipment.update({
-    where: { id: params.id },
-    data: {
-      ...rest,
-      ...(waypoints && { waypoints: JSON.stringify(waypoints) }),
-      ...(etaAt !== undefined && { etaAt: etaAt ? new Date(etaAt) : null }),
-    },
-  });
-  bus.emit({
-    type: "shipment.updated",
-    shipmentId: updated.id,
-    status: updated.status,
-  });
-  return NextResponse.json(updated);
-}
+const idSchema = z.string().min(1).max(64);
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  await db.shipment.delete({ where: { id: params.id } });
-  bus.emit({ type: "shipment.updated", shipmentId: params.id, status: "deleted" });
-  return NextResponse.json({ ok: true });
-}
+export const PATCH = guard<z.infer<typeof patchInput>, { id: string }>({
+  body: patchInput,
+  requireOrigin: true,
+  requireAdmin: "demo",
+  rateLimit: { bucket: "shipments:patch", windowSec: 60, max: 20 },
+  handler: async ({ body, params }) => {
+    const id = idSchema.parse(params.id);
+    const { waypoints, etaAt, reason: _reason, ...rest } = body;
+    const updated = await db.shipment.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(waypoints && { waypoints: JSON.stringify(waypoints) }),
+        ...(etaAt !== undefined && { etaAt: etaAt ? new Date(etaAt) : null }),
+      },
+    });
+    bus.emit({
+      type: "shipment.updated",
+      shipmentId: updated.id,
+      status: updated.status,
+    });
+    return ok(updated);
+  },
+});
+
+export const DELETE = guard<unknown, { id: string }>({
+  requireOrigin: true,
+  requireAdmin: "demo",
+  rateLimit: { bucket: "shipments:delete", windowSec: 60, max: 20 },
+  handler: async ({ params }) => {
+    const id = idSchema.parse(params.id);
+    await db.shipment.delete({ where: { id } });
+    bus.emit({ type: "shipment.updated", shipmentId: id, status: "deleted" });
+    return ok({ ok: true });
+  },
+});

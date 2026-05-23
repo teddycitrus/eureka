@@ -1,6 +1,12 @@
 import { bus } from "@/lib/events";
+import { limit, retryAfterSec } from "@/lib/rate-limit";
+import { clientIp, hashId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+// On Vercel, function maxDuration tops out at 60s (Hobby) / 300s (Pro). The
+// client EventSource will auto-reconnect; we still hand the connection back
+// to the runtime well before the cap so we don't get killed mid-frame.
+export const maxDuration = 60;
 
 /**
  * GET /api/stream
@@ -8,6 +14,25 @@ export const dynamic = "force-dynamic";
  * subscribes here and re-fetches /api/globe on relevant signals.
  */
 export async function GET(req: Request) {
+  // Cheap per-IP throttle so a stuck client can't open thousands of sockets.
+  const rl = await limit(hashId(clientIp(req)), {
+    bucket: "stream:connect",
+    windowSec: 60,
+    max: 20,
+  });
+  if (!rl.ok) {
+    return new Response(
+      `: too many connections\n\n`,
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Retry-After": String(retryAfterSec(rl)),
+        },
+      },
+    );
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -20,7 +45,7 @@ export async function GET(req: Request) {
             encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
           );
         } catch {
-          // controller already closed — drop the event
+          /* controller already closed */
         }
       };
 
@@ -28,7 +53,6 @@ export async function GET(req: Request) {
 
       const unsubscribe = bus.subscribe((evt) => send(evt.type, evt));
 
-      // Comment-only keepalive every 25s to defeat proxies
       const heartbeat = setInterval(() => {
         if (closed) return;
         try {
@@ -38,10 +62,14 @@ export async function GET(req: Request) {
         }
       }, 25_000);
 
+      // Soft close at 50s so the runtime doesn't shoot us — client reconnects.
+      const softClose = setTimeout(() => cleanup(), 50_000);
+
       const cleanup = () => {
         if (closed) return;
         closed = true;
         clearInterval(heartbeat);
+        clearTimeout(softClose);
         unsubscribe();
         try {
           controller.close();
@@ -60,6 +88,8 @@ export async function GET(req: Request) {
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
     },
   });
 }

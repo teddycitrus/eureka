@@ -108,7 +108,8 @@ export function GlobeView({
   return (
     <div ref={containerRef} className="h-full w-full">
       <Globe
-        ref={globeRef}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ref={globeRef as unknown as React.MutableRefObject<any>}
         width={size.w}
         height={size.h}
         backgroundColor="rgba(0,0,0,0)"

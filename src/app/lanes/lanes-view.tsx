@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { IrisMark } from "@/components/iris-mark";
 import { TestFireButton } from "@/components/test-fire-button";
+import { DemoCallCard } from "@/components/demo-call-card";
 import { Window } from "@/components/window";
 import { FourKitesLogin, type ConnectionStatus } from "@/components/fourkites-login";
 import { DisruptionRail } from "./disruption-rail";
@@ -230,8 +231,11 @@ export function LanesView() {
           <div className="pointer-events-none absolute bottom-4 left-5 font-mono text-[10px] uppercase tracking-chart text-ink-dim">
             drag titlebars · double-click to maximize · scroll the globe
           </div>
-          <div className="absolute bottom-4 right-4">
-            <TestFireButton variant="ghost" />
+          <div className="pointer-events-none absolute bottom-4 right-4 flex flex-col items-end gap-2">
+            <DemoCallCard />
+            {process.env.NODE_ENV !== "production" && (
+              <TestFireButton variant="ghost" />
+            )}
           </div>
         </div>
 

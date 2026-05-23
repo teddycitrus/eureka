@@ -203,6 +203,65 @@ export async function placeAlertCall(opts: {
   return (await res.json()) as VapiCallResponse;
 }
 
+/**
+ * Place a short demo call to a recruiter-supplied number. Strictly capped
+ * in duration, no function tools, no PII captured beyond what Vapi already
+ * logs. Built for the public "call me" demo button — never reuse this for
+ * the production alert flow.
+ */
+export async function placeDemoCall(opts: {
+  toPhone: string;
+  callerLabel: string;
+  maxSeconds: number;
+}): Promise<VapiCallResponse> {
+  const systemPrompt = [
+    "You are Iris — a supply-chain risk briefing voice agent built as a portfolio demo.",
+    `You are calling ${opts.callerLabel} who clicked a button on the Iris demo page.`,
+    "Keep the call under 60 seconds. Greet them, briefly explain that Iris monitors",
+    "supply-chain disruptions (Red Sea reroutes, Panama drought, semiconductor outages)",
+    "and reaches the on-call manager with a recommendation when an incident affects",
+    "a tracked supplier. Ask one short question — what is the most interesting use of",
+    "voice agents they have seen — and react warmly to their answer. Then thank them",
+    "and end the call. Do not collect personal information. Do not promise anything.",
+  ].join(" ");
+
+  const assistant = {
+    name: "iris-demo",
+    firstMessage: "Hi! This is Iris from a portfolio demo — do you have about 30 seconds?",
+    voice: elevenLabsVoiceConfig(),
+    model: {
+      provider: "google" as const,
+      model: env.geminiModel(),
+      temperature: 0.4,
+      messages: [{ role: "system", content: systemPrompt }],
+    },
+    transcriber: { provider: "deepgram" as const, model: "nova-2", language: "en" },
+    endCallFunctionEnabled: true,
+    silenceTimeoutSeconds: 15,
+    maxDurationSeconds: opts.maxSeconds,
+  };
+
+  const body: Record<string, unknown> = {
+    phoneNumberId: env.vapiPhoneNumberId(),
+    customer: { number: opts.toPhone },
+    assistant,
+  };
+
+  const res = await fetch(`${VAPI_BASE}/call/phone`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.vapiKey()}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Vapi demo call failed (${res.status}): ${text}`);
+  }
+  return (await res.json()) as VapiCallResponse;
+}
+
 export async function getVapiCall(callId: string) {
   const res = await fetch(`${VAPI_BASE}/call/${callId}`, {
     headers: { authorization: `Bearer ${env.vapiKey()}` },

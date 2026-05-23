@@ -1,90 +1,93 @@
-import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { parseList } from "@/lib/utils";
 import { bus } from "@/lib/events";
 import { dispatchCallsForAlert } from "@/lib/dispatch";
+import { guard, ok } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+const input = z.object({
+  supplierId: z.string().min(1).max(64).optional(),
+  severity: z.enum(["high", "critical"]).optional(),
+});
 
 /**
  * POST /api/test/fire-incident
  * Create a synthetic high-severity alert for testing the voice-call flow.
- * Picks a random supplier that has at least one callable contact so the
- * "Brief …" button on the resulting alert actually has a number to dial.
- *
- * Optional body: { supplierId?, severity? }
+ * Always admin-gated — this places outbound voice calls.
  */
-export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => ({}))) as {
-    supplierId?: string;
-    severity?: "high" | "critical";
-  };
+export const POST = guard({
+  body: input,
+  requireOrigin: true,
+  requireAdmin: true,
+  rateLimit: { bucket: "test:fire", windowSec: 60, max: 10 },
+  handler: async ({ body }) => {
+    const candidates = await db.supplier.findMany({
+      where: body.supplierId
+        ? { id: body.supplierId }
+        : { contacts: { some: { contact: { receiveCalls: true } } } },
+      include: { contacts: { include: { contact: true } } },
+    });
 
-  // Find suppliers that have at least one contact with receiveCalls=true
-  const candidates = await db.supplier.findMany({
-    where: body.supplierId
-      ? { id: body.supplierId }
-      : { contacts: { some: { contact: { receiveCalls: true } } } },
-    include: { contacts: { include: { contact: true } } },
-  });
+    if (candidates.length === 0) {
+      return ok(
+        {
+          error:
+            "no supplier with a callable contact found — add a contact in /contacts and map it to a supplier first",
+        },
+        { status: 400 },
+      );
+    }
 
-  if (candidates.length === 0) {
-    return NextResponse.json(
-      {
-        error:
-          "no supplier with a callable contact found — add a contact in /contacts and map it to a supplier first",
+    const supplier = candidates[Math.floor(Math.random() * candidates.length)];
+    const cats = parseList<string>(supplier.categories);
+    const scenario = pickScenario(supplier.country, supplier.region, cats);
+    const severity = body.severity ?? (Math.random() < 0.35 ? "critical" : "high");
+
+    const news = await db.newsItem.create({
+      data: {
+        title: scenario.title,
+        summary: scenario.summary,
+        url: `https://test.iris.local/incident/${Date.now()}`,
+        source: "Iris Test Harness",
+        publishedAt: new Date(),
+        region: supplier.region,
+        topics: JSON.stringify(scenario.topics),
+        riskScore: severity === "critical" ? 0.92 : 0.78,
       },
-      { status: 400 },
-    );
-  }
+    });
 
-  const supplier = candidates[Math.floor(Math.random() * candidates.length)];
-  const cats = parseList<string>(supplier.categories);
-  const scenario = pickScenario(supplier.country, supplier.region, cats);
-  const severity = body.severity ?? (Math.random() < 0.35 ? "critical" : "high");
+    const alert = await db.alert.create({
+      data: {
+        newsId: news.id,
+        supplierId: supplier.id,
+        severity,
+        status: "pending",
+        recommendation: scenario.recommendation,
+      },
+      include: { news: true, supplier: true },
+    });
 
-  const news = await db.newsItem.create({
-    data: {
-      title: scenario.title,
-      summary: scenario.summary,
-      url: `https://test.iris.local/incident/${Date.now()}`,
-      source: "Iris Test Harness",
-      publishedAt: new Date(),
-      region: supplier.region,
-      topics: JSON.stringify(scenario.topics),
-      riskScore: severity === "critical" ? 0.92 : 0.78,
-    },
-  });
-
-  const alert = await db.alert.create({
-    data: {
-      newsId: news.id,
+    bus.emit({
+      type: "alert.created",
+      alertId: alert.id,
       supplierId: supplier.id,
       severity,
-      status: "pending",
-      recommendation: scenario.recommendation,
-    },
-    include: { news: true, supplier: true },
-  });
+    });
 
-  bus.emit({
-    type: "alert.created",
-    alertId: alert.id,
-    supplierId: supplier.id,
-    severity,
-  });
+    const dispatch = await dispatchCallsForAlert(alert.id);
 
-  const dispatch = await dispatchCallsForAlert(alert.id);
-
-  return NextResponse.json({
-    ok: true,
-    alertId: alert.id,
-    supplier: supplier.name,
-    severity,
-    headline: scenario.title,
-    dispatch,
-  });
-}
+    return ok({
+      ok: true,
+      alertId: alert.id,
+      supplier: supplier.name,
+      severity,
+      headline: scenario.title,
+      dispatch,
+    });
+  },
+});
 
 type Scenario = {
   title: string;

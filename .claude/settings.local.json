@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(PORT=3000 npx next dev)",
+      "Bash(echo \"started, pid=$!\")",
+      "Read(//tmp/**)",
+      "Bash(curl -fsS -o /dev/null http://localhost:3000/api/globe)",
+      "Bash(curl -sI http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -X POST http://localhost:3000/api/demo/call-me -H \"content-type: application/json\" -H \"origin: http://localhost:3000\" -d '{\"phone\":\"not-a-phone\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/demo/call-me -H \"content-type: application/json\" -H \"origin: http://localhost:3000\" -d '{\"phone\":\"+33612345678\"}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -X POST http://localhost:3000/api/demo/call-me -H \"content-type: application/json\" -H \"origin: https://evil.example\" -d '{\"phone\":\"+14155551212\"}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/api/alerts)",
+      "Bash(curl -s -X POST http://localhost:3000/api/demo/call-me -H \"content-type: application/json\" -H \"origin: http://localhost:3000\" -d '{\"phone\":\"not-a-phone\"}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} \" -X POST http://localhost:3000/api/demo/call-me -H \"content-type: application/json\" -H \"origin: http://localhost:3000\" -d '{\"phone\":\"+19999999999\"}')",
+      "Bash(kill 1851)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npx prisma *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(sqlite3 --version)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "claude-flow"
+  ]
+}
