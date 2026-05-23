@@ -6,12 +6,12 @@ import { PrismaClient } from "@prisma/client";
  * Local dev → DATABASE_URL=file:./dev.db (default). Prisma talks to SQLite
  * directly.
  *
- * Serverless prod → TURSO_DATABASE_URL + TURSO_AUTH_TOKEN. We go through
- * the libSQL driver adapter so a remote Turso instance is the backing
- * store. Same schema, same queries.
+ * Serverless prod → TURSO_DATABASE_URL + TURSO_AUTH_TOKEN. We construct a
+ * libSQL Client and hand it to PrismaLibSQL so Prisma queries route to
+ * a remote Turso instance. Same schema, same queries.
  *
- * The adapter is loaded lazily so a fresh dev install without
- * @libsql/client still boots — `require` only fires when Turso env vars
+ * Adapter + libsql client are loaded lazily so a fresh dev install without
+ * those packages still boots — `require` only fires when Turso env vars
  * are present.
  */
 
@@ -23,10 +23,15 @@ function buildClient(): PrismaClient {
 
   if (tursoUrl && tursoToken) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSQL } = require("@prisma/adapter-libsql") as {
-      PrismaLibSQL: new (cfg: { url: string; authToken: string }) => unknown;
+    const { createClient } = require("@libsql/client") as {
+      createClient: (cfg: { url: string; authToken: string }) => unknown;
     };
-    const adapter = new PrismaLibSQL({ url: tursoUrl, authToken: tursoToken });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PrismaLibSQL } = require("@prisma/adapter-libsql") as {
+      PrismaLibSQL: new (client: unknown) => unknown;
+    };
+    const libsql = createClient({ url: tursoUrl, authToken: tursoToken });
+    const adapter = new PrismaLibSQL(libsql);
     return new PrismaClient({
       adapter: adapter as never,
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
