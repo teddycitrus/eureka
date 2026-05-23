@@ -60,9 +60,11 @@
 Eureka is a supply-chain risk intelligence platform that surfaces vendor and supplier exposure through an interactive 3D globe and lets analysts drill into risk signals via AI-powered voice agents. Instead of sitting idle on a dashboard, Eureka actively scans for incidents and proactively briefs you + suggests next steps.
 
 <br>
+<br>
 
 Eureka is built to layer on top of [FourKites Movement](https://www.fourkites.com/) the leading real-time supply-chain visibility platform used by Fortune 500 logistics and procurement teams to track shipments, ETAs and lane telemetry. FourKites tells you *where* every shipment is; Eureka tells you *which of them are about to be in trouble* and gets the right on-call manager on the phone before the disruption hits.
 
+<br>
 <br>
 
 Key capabilities:
