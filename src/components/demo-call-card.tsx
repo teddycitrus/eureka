@@ -1,10 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { Loader2, Phone, Check, X, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type State = "idle" | "pending" | "ok" | "err";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement | string,
+        opts: {
+          sitekey: string;
+          size?: "normal" | "compact" | "flexible";
+          theme?: "auto" | "light" | "dark";
+          callback: (token: string) => void;
+          "expired-callback"?: () => void;
+          "error-callback"?: () => void;
+        },
+      ) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 /**
  * Recruiter-facing demo card with two paths:
@@ -24,6 +46,38 @@ export function DemoCallCard() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioState, setAudioState] = useState<"idle" | "playing" | "missing">("idle");
   const [audioReady, setAudioReady] = useState(false);
+
+  // Turnstile state — only relevant when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set.
+  const turnstileRef = useRef<HTMLDivElement | null>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const captchaRequired = Boolean(TURNSTILE_SITE_KEY);
+
+  // Render the Turnstile widget once the global script has loaded.
+  useEffect(() => {
+    if (!captchaRequired) return;
+    let cancelled = false;
+    const tryRender = () => {
+      if (cancelled) return;
+      if (!window.turnstile || !turnstileRef.current) {
+        window.setTimeout(tryRender, 200);
+        return;
+      }
+      if (turnstileWidgetId.current) return; // already rendered
+      turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        size: "compact",
+        theme: "dark",
+        callback: (token) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+      });
+    };
+    tryRender();
+    return () => {
+      cancelled = true;
+    };
+  }, [captchaRequired]);
 
   // Probe for the sample MP3 once on mount so we can hide the button if
   // it's not deployed yet (e.g. local dev without public/demo-call.mp3).
@@ -53,6 +107,7 @@ export function DemoCallCard() {
         body: JSON.stringify({
           phone: phone.trim(),
           name: name.trim() || undefined,
+          captchaToken: captchaToken || undefined,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -69,6 +124,11 @@ export function DemoCallCard() {
               ? "rate limited — try again later"
               : `failed (${res.status})`),
         );
+        // Force a fresh CAPTCHA token after any rejection.
+        if (captchaRequired && window.turnstile && turnstileWidgetId.current) {
+          window.turnstile.reset(turnstileWidgetId.current);
+          setCaptchaToken("");
+        }
         setTimeout(() => setState("idle"), 6000);
         return;
       }
@@ -76,6 +136,10 @@ export function DemoCallCard() {
       setMsg(data.message ?? "ringing now");
       setPhone("");
       setName("");
+      if (captchaRequired && window.turnstile && turnstileWidgetId.current) {
+        window.turnstile.reset(turnstileWidgetId.current);
+        setCaptchaToken("");
+      }
       setTimeout(() => setState("idle"), 8000);
     } catch {
       setState("err");
@@ -137,9 +201,20 @@ export function DemoCallCard() {
         maxLength={16}
         className="border border-line bg-bg/60 px-2 py-1 font-mono text-[11px] text-ink placeholder:text-ink-dim focus:border-amber/60 focus:outline-none"
       />
+      {captchaRequired && (
+        <>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            strategy="lazyOnload"
+            async
+            defer
+          />
+          <div ref={turnstileRef} className="flex justify-center" />
+        </>
+      )}
       <button
         type="submit"
-        disabled={state === "pending" || !phone}
+        disabled={state === "pending" || !phone || (captchaRequired && !captchaToken)}
         className={cn(
           "inline-flex items-center justify-center gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-chart transition-colors",
           state === "ok" && "border-risk-low/50 bg-risk-low/15 text-risk-low",

@@ -4,6 +4,7 @@ import { guard, ok } from "@/lib/api";
 import { hashId } from "@/lib/auth";
 import { limit, retryAfterSec } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
+import { verifyTurnstile } from "@/lib/captcha";
 
 export const dynamic = "force-dynamic";
 
@@ -27,15 +28,28 @@ const labelRegex = /^[\p{L}\p{N}\s\-'.,]{1,40}$/u;
 const input = z.object({
   phone: z.string().regex(phoneRegex, "phone must be E.164 (e.g. +14155551212)"),
   name: z.string().regex(labelRegex, "name has unsupported characters").max(40).optional(),
+  // Cloudflare Turnstile token. Optional in the schema because the server
+  // only enforces it when TURNSTILE_SECRET_KEY is configured.
+  captchaToken: z.string().max(2048).optional(),
 });
 
 export const POST = guard({
   body: input,
   requireOrigin: true,
   rateLimit: { bucket: "demo:call-me:ip", windowSec: 3600, max: 1 },
-  handler: async ({ body }) => {
+  handler: async ({ body, ip }) => {
     const phone = body.phone;
     const callerLabel = (body.name ?? "friend").trim();
+
+    // CAPTCHA — verified before any other expensive check so a flood of
+    // bot submissions can't burn through rate-limit slots.
+    const captcha = await verifyTurnstile(body.captchaToken, ip);
+    if (!captcha.ok) {
+      return ok(
+        { error: `captcha failed: ${captcha.reason}` },
+        { status: 403 },
+      );
+    }
 
     // Region whitelist — phone must start with one of the allowed prefixes.
     const allowedPrefixes = env.demoCallRegions();

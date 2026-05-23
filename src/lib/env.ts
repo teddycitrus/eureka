@@ -52,6 +52,11 @@ const schema = z.object({
   DEMO_CALL_REGIONS: z.string().default("+1,+44,+61"),
   DEMO_CALL_MAX_PER_DAY: z.coerce.number().int().positive().default(30),
   DEMO_CALL_MAX_SECONDS: z.coerce.number().int().positive().default(90),
+
+  // Cloudflare Turnstile (optional — when both are set, the demo call-me
+  // endpoint requires a verified token). Site key is also exposed to the
+  // client via NEXT_PUBLIC_TURNSTILE_SITE_KEY which Next.js handles separately.
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
 type Parsed = z.infer<typeof schema>;
