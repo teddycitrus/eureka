@@ -53,18 +53,39 @@ export function hasAdminToken(req: NextRequest | Request): boolean {
  * Origin header (e.g. webhooks) pass this check — webhooks have their own
  * signature verification.
  */
+function originOf(url: string): string | null {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
 export function originAllowed(req: NextRequest | Request): boolean {
   const headers = "headers" in req ? req.headers : new Headers();
   const origin = headers.get("origin");
   const referer = headers.get("referer");
-  const candidate = origin ?? (referer ? new URL(referer).origin : null);
+  const candidate = origin ?? (referer ? originOf(referer) : null);
   if (!candidate) return true; // no header → likely curl/webhook; rely on other auth
+
+  // Same-origin always allowed. We construct what our own origin looks like
+  // from the request's Host header (which proxies set to the public hostname)
+  // so this works regardless of how PUBLIC_BASE_URL is configured.
+  const host = headers.get("x-forwarded-host") ?? headers.get("host");
+  const proto = headers.get("x-forwarded-proto") ?? "https";
+  if (host) {
+    const sameOrigin = `${proto}://${host}`;
+    if (candidate === sameOrigin) return true;
+  }
+
   // Dev escape hatch: localhost is fine when NODE_ENV !== "production".
   if (!env.isProd() && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(candidate)) {
     return true;
   }
-  const allowed = env.allowedOrigins();
-  return allowed.some((a) => candidate === a || candidate.startsWith(a));
+
+  // Explicit allow-list (for cross-origin callers, e.g. a separate dashboard).
+  const allowed = env.allowedOrigins().map((a) => originOf(a) ?? a.replace(/\/$/, ""));
+  return allowed.includes(candidate);
 }
 
 /** True when mutation routes should be rejected (or admin-token-gated). */
