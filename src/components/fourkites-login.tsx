@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "iris.fk.connected";
 const STORAGE_ACCOUNT = "iris.fk.account";
+const STORAGE_SKIPPED = "iris.fk.skipped";
 
 export type ConnectionStatus = "unknown" | "connected" | "skipped";
 
@@ -35,8 +36,12 @@ export function FourKitesLogin({
       onStatus("connected", savedAccount);
       return;
     }
+    if (window.localStorage.getItem(STORAGE_SKIPPED) === "true") {
+      onStatus("skipped");
+      return;
+    }
     const W = 520;
-    const H = 520;
+    const H = 580;
     setPos({
       x: Math.max(20, Math.floor(window.innerWidth / 2 - W / 2)),
       y: Math.max(40, Math.floor(window.innerHeight / 2 - H / 2)),
@@ -65,6 +70,11 @@ export function FourKitesLogin({
   }
 
   function skip() {
+    try {
+      window.localStorage.setItem(STORAGE_SKIPPED, "true");
+    } catch {
+      /* ignore — private mode etc */
+    }
     onStatus("skipped");
     setOpen(false);
   }
@@ -78,8 +88,8 @@ export function FourKitesLogin({
       <Window
         title="connect data source"
         defaultPos={pos}
-        defaultSize={{ width: 520, height: 520 }}
-        minSize={{ width: 380, height: 320 }}
+        defaultSize={{ width: 520, height: 580 }}
+        minSize={{ width: 380, height: 360 }}
         zIndex={71}
         bounds="parent"
         onClose={skip}
@@ -89,6 +99,28 @@ export function FourKitesLogin({
           onSubmit={authorize}
           className="flex h-full flex-col overflow-y-auto px-6 pb-5 pt-5"
         >
+          <div className="mb-4 border border-amber/40 bg-amber/10 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-mono text-[10px] uppercase tracking-chart text-amber">
+                portfolio demo · no real auth
+              </span>
+              <button
+                type="button"
+                onClick={skip}
+                disabled={phase !== "idle"}
+                className="border border-amber/60 bg-amber/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-chart text-amber hover:bg-amber/25 disabled:opacity-50"
+              >
+                skip · use sample data →
+              </button>
+            </div>
+            <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
+              In production, a customer would link their <span className="text-ink">FourKites Movement</span> account
+              here so Iris could pull live shipment telemetry and ETAs.
+              For this demo, click <span className="text-amber">skip</span> to load synthetic
+              supply-chain data — the rest of the dashboard works exactly the same.
+            </p>
+          </div>
+
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="label">data source</span>

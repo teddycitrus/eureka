@@ -228,9 +228,6 @@ export function LanesView() {
             <Legend dot="bg-risk-high" label="exposed" />
             <Legend dot="bg-risk-critical" label="critical" />
           </div>
-          <div className="pointer-events-none absolute bottom-4 left-5 font-mono text-[10px] uppercase tracking-chart text-ink-dim">
-            drag titlebars · double-click to maximize · scroll the globe
-          </div>
           <div className="pointer-events-none absolute bottom-4 right-4 flex flex-col items-end gap-2">
             <DemoCallCard />
             {process.env.NODE_ENV !== "production" && (

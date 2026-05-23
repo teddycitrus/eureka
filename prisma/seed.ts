@@ -1,6 +1,30 @@
 import { PrismaClient } from "@prisma/client";
 
-const db = new PrismaClient();
+/**
+ * When TURSO_* env vars are set we go through the libSQL adapter so the
+ * seed lands in Turso. Otherwise this is just a vanilla local Prisma
+ * client writing to file:./dev.db.
+ */
+function buildDb(): PrismaClient {
+  const tursoUrl = process.env.TURSO_DATABASE_URL;
+  const tursoToken = process.env.TURSO_AUTH_TOKEN;
+  if (tursoUrl && tursoToken) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createClient } = require("@libsql/client") as {
+      createClient: (cfg: { url: string; authToken: string }) => unknown;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PrismaLibSQL } = require("@prisma/adapter-libsql") as {
+      PrismaLibSQL: new (client: unknown) => unknown;
+    };
+    const libsql = createClient({ url: tursoUrl, authToken: tursoToken });
+    const adapter = new PrismaLibSQL(libsql);
+    return new PrismaClient({ adapter: adapter as never } as never);
+  }
+  return new PrismaClient();
+}
+
+const db = buildDb();
 
 async function main() {
   await db.call.deleteMany();
