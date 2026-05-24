@@ -10,7 +10,7 @@ export const maxDuration = 60;
 
 /**
  * GET /api/stream
- * Server-Sent Events stream of Iris-internal events. The /lanes globe view
+ * Server-Sent Events stream of Eureka-internal events. The /lanes globe view
  * subscribes here and re-fetches /api/globe on relevant signals.
  */
 export async function GET(req: Request) {

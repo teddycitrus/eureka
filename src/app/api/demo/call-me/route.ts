@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { placeDemoCall } from "@/lib/vapi";
+import { placeDemoCall, type DemoBriefing } from "@/lib/vapi";
 import { guard, ok } from "@/lib/api";
 import { hashId } from "@/lib/auth";
 import { limit, retryAfterSec } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { verifyTurnstile } from "@/lib/captcha";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -99,11 +100,25 @@ export const POST = guard({
       );
     }
 
+    // Pick a random seeded alert so the demo briefing is grounded in real
+    // data from the dashboard rather than a generic intro script.
+    const briefing = await pickDemoBriefing();
+    if (!briefing) {
+      return ok(
+        {
+          error:
+            "demo briefings unavailable — seed the database with `npm run db:seed`",
+        },
+        { status: 503 },
+      );
+    }
+
     try {
       const call = await placeDemoCall({
         toPhone: phone,
         callerLabel,
         maxSeconds: env.demoCallMaxSeconds(),
+        briefing,
       });
       return ok({
         ok: true,
@@ -121,3 +136,21 @@ export const POST = guard({
     }
   },
 });
+
+async function pickDemoBriefing(): Promise<DemoBriefing | null> {
+  const alerts = await db.alert.findMany({
+    where: { status: { not: "dismissed" } },
+    include: { news: true, supplier: true },
+    take: 25,
+  });
+  if (alerts.length === 0) return null;
+  const a = alerts[Math.floor(Math.random() * alerts.length)];
+  return {
+    supplierName: a.supplier.name,
+    region: a.supplier.region,
+    severity: a.severity,
+    headline: a.news.title,
+    summary: a.news.summary,
+    recommendation: a.recommendation,
+  };
+}

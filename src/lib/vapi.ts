@@ -4,7 +4,7 @@ import { REROUTE_PRESETS } from "./reroute";
 
 /**
  * Thin wrapper around the Vapi REST API.
- * Iris places outbound calls by POSTing to /call/phone with an inline
+ * Eureka places outbound calls by POSTing to /call/phone with an inline
  * assistant configured to read a supply-chain alert briefing and capture
  * the on-call manager's decision.
  */
@@ -55,11 +55,11 @@ function buildSystemPrompt(b: AssistantBriefing): string {
     .join("\n");
 
   return [
-    "You are Iris, an interactive supply-chain risk briefing agent calling on behalf of the operations team.",
+    "You are Eureka, an interactive supply-chain risk briefing agent calling on behalf of the operations team.",
     `You are calling ${b.contactName} about a ${b.severity.toUpperCase()} risk affecting ${b.supplierName} (${b.region}).`,
     "",
     "Conversation flow:",
-    "1. Greet the contact briefly, identify yourself as Iris from the operations desk.",
+    "1. Greet the contact briefly, identify yourself as Eureka from the operations desk.",
     "2. Confirm you have ~60 seconds for an urgent supply-chain update — wait for acknowledgement.",
     "3. Read the briefing below (paraphrase concisely, do not list everything verbatim).",
     "4. Read the recommendation, then ask which decision they want to take:",
@@ -89,8 +89,8 @@ function buildSystemPrompt(b: AssistantBriefing): string {
 
 function buildAssistant(b: AssistantBriefing) {
   return {
-    name: `iris-alert-${b.alertId}`,
-    firstMessage: `Hi ${b.contactName}, this is Iris from the operations desk — do you have about a minute for an urgent supply-chain briefing on ${b.supplierName}?`,
+    name: `eureka-alert-${b.alertId}`,
+    firstMessage: `Hi ${b.contactName}, this is Eureka from the operations desk — do you have about a minute for an urgent supply-chain briefing on ${b.supplierName}?`,
     voice: elevenLabsVoiceConfig(),
     model: {
       provider: "google" as const,
@@ -126,7 +126,7 @@ function buildAssistant(b: AssistantBriefing) {
           function: {
             name: "reroute_shipment",
             description:
-              "Reroute a linked shipment along a named maritime/air corridor. The Iris globe will redraw the route in real time. Use when the contact agrees to redirect a specific shipment.",
+              "Reroute a linked shipment along a named maritime/air corridor. The Eureka globe will redraw the route in real time. Use when the contact agrees to redirect a specific shipment.",
             parameters: {
               type: "object",
               properties: {
@@ -203,31 +203,58 @@ export async function placeAlertCall(opts: {
   return (await res.json()) as VapiCallResponse;
 }
 
+export type DemoBriefing = {
+  supplierName: string;
+  region: string;
+  severity: string;
+  headline: string;
+  summary: string;
+  recommendation: string;
+};
+
 /**
- * Place a short demo call to a recruiter-supplied number. Strictly capped
- * in duration, no function tools, no PII captured beyond what Vapi already
- * logs. Built for the public "call me" demo button — never reuse this for
- * the production alert flow.
+ * Place a short demo call to a recruiter-supplied number. The agent reads
+ * one of Eureka's seeded supply-chain briefings (Taiwan typhoon, Chilean
+ * lithium strike, etc.) so the caller hears a representative example of
+ * the real alert flow — just without any tools, transcript retention, or
+ * decision capture. Strictly capped in duration; never reuse this for the
+ * production alert flow.
  */
 export async function placeDemoCall(opts: {
   toPhone: string;
   callerLabel: string;
   maxSeconds: number;
+  briefing: DemoBriefing;
 }): Promise<VapiCallResponse> {
+  const { briefing: b, callerLabel } = opts;
   const systemPrompt = [
-    "You are Iris — a supply-chain risk briefing voice agent built as a portfolio demo.",
-    `You are calling ${opts.callerLabel} who clicked a button on the Iris demo page.`,
-    "Keep the call under 60 seconds. Greet them, briefly explain that Iris monitors",
-    "supply-chain disruptions (Red Sea reroutes, Panama drought, semiconductor outages)",
-    "and reaches the on-call manager with a recommendation when an incident affects",
-    "a tracked supplier. Ask one short question — what is the most interesting use of",
-    "voice agents they have seen — and react warmly to their answer. Then thank them",
-    "and end the call. Do not collect personal information. Do not promise anything.",
-  ].join(" ");
+    "You are Eureka — a supply-chain risk briefing voice agent built as a portfolio demo.",
+    `You are calling ${callerLabel}, who clicked a button on the Eureka demo page to hear a sample briefing.`,
+    "",
+    "Conversation flow (keep the whole call under 60 seconds):",
+    `1. Greet ${callerLabel} warmly by name. Identify yourself as Eureka from the operations desk and say you have a sample supply-chain briefing to share.`,
+    "2. Read the briefing below — paraphrase concisely, do not list everything verbatim.",
+    "3. State the recommended next step in one sentence.",
+    `4. Ask ${callerLabel} one short question — what is the most interesting use of voice agents they have seen — and react warmly to whatever they say (one sentence).`,
+    "5. Thank them, mention that the live version of Eureka actually captures a decision and can reroute shipments, then end the call.",
+    "",
+    "Hard rules:",
+    "- Do not collect personal information.",
+    "- Do not promise anything beyond what is in the briefing.",
+    "- Do not invent details beyond the briefing below.",
+    "- Never read references character-by-character — say 'PO 9821' as 'PO ninety-eight twenty-one'.",
+    "",
+    "── SAMPLE BRIEFING ──",
+    `Supplier: ${b.supplierName} (${b.region})`,
+    `Severity: ${b.severity.toUpperCase()}`,
+    `Headline: ${b.headline}`,
+    `Summary: ${b.summary}`,
+    `Recommended action: ${b.recommendation}`,
+  ].join("\n");
 
   const assistant = {
-    name: "iris-demo",
-    firstMessage: "Hi! This is Iris from a portfolio demo — do you have about 30 seconds?",
+    name: "eureka-demo",
+    firstMessage: `Hi ${callerLabel}! This is Eureka from the operations desk — do you have about thirty seconds for a sample supply-chain briefing?`,
     voice: elevenLabsVoiceConfig(),
     model: {
       provider: "google" as const,

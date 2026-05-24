@@ -1,6 +1,6 @@
-# Iris — Quickstart
+# Eureka — Quickstart
 
-Iris watches news for supply-chain risk, scores it against your supplier graph,
+Eureka watches news for supply-chain risk, scores it against your supplier graph,
 and dispatches an interactive voice agent that calls the right stakeholder when
 a decision is needed.
 
@@ -25,14 +25,14 @@ exercise the voice-call flow.
 
 ## 3 · Trigger a voice call
 
-From `/alerts`, click **Brief …** on any alert. Iris will:
+From `/alerts`, click **Brief …** on any alert. Eureka will:
 
 1. POST `/api/calls/initiate { alertId }`
 2. Build a Vapi assistant inline with the alert briefing as system context
 3. Vapi dials the contact's phone via the imported Twilio number
 4. The call uses an ElevenLabs voice
 5. The agent reads the briefing, asks for a decision, and calls `record_decision`
-6. Vapi POSTs to `/api/calls/vapi-webhook` → Iris updates the alert + transcript
+6. Vapi POSTs to `/api/calls/vapi-webhook` → Eureka updates the alert + transcript
 
 For the webhook to reach you in dev, expose the server with ngrok:
 
@@ -51,7 +51,7 @@ click "Pull latest signals" on the dashboard, or "ingest now" on /news
 npm run ingest -- "semiconductor OR shipping OR tariff"
 ```
 
-If `NEWSAPI_KEY` isn't set, Iris uses a curated stub feed so the UI is never empty.
+If `NEWSAPI_KEY` isn't set, Eureka uses a curated stub feed so the UI is never empty.
 
 ## 5 · How the voice flow is wired
 

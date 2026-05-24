@@ -52,7 +52,7 @@ export default async function AlertsPage() {
                   href={a.news.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-iris-200"
+                  className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-eureka-200"
                 >
                   source <ExternalLink className="h-3 w-3" />
                 </a>
@@ -67,7 +67,7 @@ export default async function AlertsPage() {
                 <div className="rounded-xl border border-line bg-bg-card/40 p-3">
                   <div className="text-[10px] uppercase tracking-wider text-ink-dim">supplier</div>
                   <div className="mt-1 flex items-center gap-2 text-sm text-ink">
-                    <Building2 className="h-3.5 w-3.5 text-iris-300" />
+                    <Building2 className="h-3.5 w-3.5 text-eureka-300" />
                     {a.supplier.name}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-ink-muted">
@@ -78,11 +78,11 @@ export default async function AlertsPage() {
 
                 <div className="rounded-xl border border-line bg-bg-card/40 p-3 md:col-span-2">
                   <div className="text-[10px] uppercase tracking-wider text-ink-dim">
-                    iris recommendation
+                    eureka recommendation
                   </div>
                   <p className="mt-1 text-sm text-ink">{a.recommendation}</p>
                   {a.decision && (
-                    <p className="mt-2 text-xs text-iris-200">
+                    <p className="mt-2 text-xs text-eureka-200">
                       decision captured: <span className="text-ink">{a.decision}</span>
                       {a.decisionMaker && <span className="text-ink-muted"> · via {a.decisionMaker}</span>}
                     </p>
@@ -123,10 +123,10 @@ export default async function AlertsPage() {
                   <ul className="mt-2 space-y-1">
                     {a.calls.map((c) => (
                       <li key={c.id} className="flex items-center gap-2 text-xs text-ink-muted">
-                        <PhoneOutgoing className="h-3 w-3 text-iris-300" />
+                        <PhoneOutgoing className="h-3 w-3 text-eureka-300" />
                         <span className="text-ink">{c.contact.name}</span>
                         <span>· {c.status}</span>
-                        {c.outcome && <span className="text-iris-200">→ {c.outcome}</span>}
+                        {c.outcome && <span className="text-eureka-200">→ {c.outcome}</span>}
                         <span className="ml-auto">{shortRelTime(c.createdAt)}</span>
                       </li>
                     ))}

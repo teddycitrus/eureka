@@ -5,9 +5,9 @@ import { Loader2, Check, ShieldCheck, Plug } from "lucide-react";
 import { Window } from "@/components/window";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "iris.fk.connected";
-const STORAGE_ACCOUNT = "iris.fk.account";
-const STORAGE_SKIPPED = "iris.fk.skipped";
+const STORAGE_KEY = "eureka.fk.connected";
+const STORAGE_ACCOUNT = "eureka.fk.account";
+const STORAGE_SKIPPED = "eureka.fk.skipped";
 
 export type ConnectionStatus = "unknown" | "connected" | "skipped";
 
@@ -115,7 +115,7 @@ export function FourKitesLogin({
             </div>
             <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
               In production, a customer would link their <span className="text-ink">FourKites Movement</span> account
-              here so Iris could pull live shipment telemetry and ETAs.
+              here so Eureka could pull live shipment telemetry and ETAs.
               For this demo, click <span className="text-amber">skip</span> to load synthetic
               supply-chain data — the rest of the dashboard works exactly the same.
             </p>
@@ -128,7 +128,7 @@ export function FourKitesLogin({
                 fourkites movement
               </h3>
               <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
-                Iris pulls live shipment telemetry, lane geometry and predicted
+                Eureka pulls live shipment telemetry, lane geometry and predicted
                 ETAs from your FourKites Movement account, then overlays news
                 signal and dispatches voice ops on top. Authorize once.
               </p>
@@ -164,7 +164,7 @@ export function FourKitesLogin({
             <Field label="Webhook delivery" hint="we register this on your behalf">
               <input
                 readOnly
-                value="https://iris.local/api/fourkites/webhook"
+                value="https://eureka.local/api/fourkites/webhook"
                 className={cn(inputClass, "font-mono cursor-default text-ink-muted")}
               />
             </Field>

@@ -39,7 +39,7 @@ export async function assessRisk(
     )
     .join("\n");
 
-  const sys = `You are Iris, a supply-chain risk analyst. Given a news item and a list of suppliers, return JSON with this exact shape:
+  const sys = `You are Eureka, a supply-chain risk analyst. Given a news item and a list of suppliers, return JSON with this exact shape:
 {
   "riskScore": number 0..1,
   "topics": string[] (kebab-case tags like "shipping", "labor", "tariff", "weather"),

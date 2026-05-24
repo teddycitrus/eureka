@@ -19,7 +19,7 @@ export default async function SuppliersPage() {
     <div className="flex flex-col">
       <Topbar
         title="Suppliers"
-        subtitle="Your monitored supply graph. Iris scores every signal against this list."
+        subtitle="Your monitored supply graph. Eureka scores every signal against this list."
       />
       <div className="grid grid-cols-1 gap-4 p-8 md:grid-cols-2 xl:grid-cols-3">
         {suppliers.map((s) => (
@@ -27,7 +27,7 @@ export default async function SuppliersPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 text-xs text-ink-muted">
-                  <Building2 className="h-3.5 w-3.5 text-iris-300" />
+                  <Building2 className="h-3.5 w-3.5 text-eureka-300" />
                   tier {s.tier}
                 </div>
                 <h3 className="mt-1 font-display text-lg text-ink">{s.name}</h3>
@@ -62,7 +62,7 @@ export default async function SuppliersPage() {
                   .sort((a, b) => a.contact.escalation - b.contact.escalation)
                   .map((cs) => (
                     <li key={cs.contactId} className="flex items-center gap-2 text-xs text-ink">
-                      <UserCircle2 className="h-3.5 w-3.5 text-iris-300" />
+                      <UserCircle2 className="h-3.5 w-3.5 text-eureka-300" />
                       <span>{cs.contact.name}</span>
                       <span className="text-ink-dim">· {cs.contact.role}</span>
                       <span className="ml-auto rounded bg-bg-raised/60 px-1.5 py-0.5 text-[10px] text-ink-muted">

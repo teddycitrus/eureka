@@ -19,12 +19,12 @@ export default async function CallsPage() {
     <div className="flex flex-col">
       <Topbar
         title="Voice ops"
-        subtitle="Outbound briefings placed by Iris, with transcripts and decisions."
+        subtitle="Outbound briefings placed by Eureka, with transcripts and decisions."
       />
       <div className="space-y-3 p-8">
         {calls.length === 0 && (
           <div className="glass rounded-2xl p-8 text-center text-ink-muted">
-            No voice operations yet. Iris will log every dispatch here.
+            No voice operations yet. Eureka will log every dispatch here.
           </div>
         )}
         {calls.map((c) => (
@@ -46,7 +46,7 @@ export default async function CallsPage() {
                 {c.status}
               </span>
               <span className="inline-flex items-center gap-1.5 text-sm text-ink">
-                <UserCircle2 className="h-3.5 w-3.5 text-iris-300" />
+                <UserCircle2 className="h-3.5 w-3.5 text-eureka-300" />
                 {c.contact.name}
                 <span className="text-ink-muted">· {c.contact.role}</span>
               </span>
@@ -55,7 +55,7 @@ export default async function CallsPage() {
                 {c.alert.supplier.name}
               </span>
               {c.outcome && (
-                <span className="rounded-full bg-iris-500/15 px-2 py-0.5 text-[11px] uppercase tracking-wider text-iris-200 ring-1 ring-iris-500/30">
+                <span className="rounded-full bg-eureka-500/15 px-2 py-0.5 text-[11px] uppercase tracking-wider text-eureka-200 ring-1 ring-eureka-500/30">
                   {c.outcome}
                 </span>
               )}

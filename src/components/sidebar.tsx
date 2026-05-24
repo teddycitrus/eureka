@@ -12,7 +12,7 @@ import {
   Settings,
   Globe2,
 } from "lucide-react";
-import { IrisWordmark } from "./iris-mark";
+import { EurekaWordmark } from "./eureka-mark";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -29,7 +29,7 @@ export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-line/60 bg-bg-raised/40 px-4 py-6 lg:flex">
       <Link href="/" className="px-2">
-        <IrisWordmark />
+        <EurekaWordmark />
       </Link>
       <p className="mt-1 px-2 text-[11px] uppercase tracking-[0.18em] text-ink-dim">
         supply intelligence
@@ -45,18 +45,18 @@ export function Sidebar() {
               className={cn(
                 "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
                 active
-                  ? "bg-iris-700/30 text-ink shadow-[inset_0_0_0_1px_rgba(168,131,255,0.25)]"
+                  ? "bg-eureka-700/30 text-ink shadow-[inset_0_0_0_1px_rgba(168,131,255,0.25)]"
                   : "text-ink-muted hover:bg-bg-hover hover:text-ink",
               )}
             >
               <Icon
                 className={cn(
                   "h-4 w-4",
-                  active ? "text-iris-300" : "text-ink-dim group-hover:text-iris-300",
+                  active ? "text-eureka-300" : "text-ink-dim group-hover:text-eureka-300",
                 )}
               />
               <span>{label}</span>
-              {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-iris-300" />}
+              {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-eureka-300" />}
             </Link>
           );
         })}
@@ -68,7 +68,7 @@ export function Sidebar() {
           <span className="font-medium text-ink">Voice ops armed</span>
         </div>
         <p className="mt-1.5 leading-relaxed">
-          Iris will dial on-call contacts when alert severity ≥ <span className="text-iris-200">high</span>.
+          Eureka will dial on-call contacts when alert severity ≥ <span className="text-eureka-200">high</span>.
         </p>
       </div>
     </aside>

@@ -2,7 +2,7 @@ import { env } from "./env";
 
 /**
  * ElevenLabs voice configuration shared with Vapi assistants.
- * Iris doesn't synthesize TTS server-side — Vapi streams to ElevenLabs
+ * Eureka doesn't synthesize TTS server-side — Vapi streams to ElevenLabs
  * directly during the call. We expose helpers to build the voice block
  * and to do server-side preview synthesis if needed.
  */

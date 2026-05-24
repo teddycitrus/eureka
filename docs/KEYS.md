@@ -1,4 +1,4 @@
-# Iris — required API keys
+# Eureka — required API keys
 
 Drop these into `.env` (start from `.env.example`).
 
@@ -17,7 +17,7 @@ Drop these into `.env` (start from `.env.example`).
 | `WEBHOOK_SHARED_SECRET`   | Generate locally: `openssl rand -hex 16`                                | yes       |
 | `PUBLIC_BASE_URL`         | Your dev tunnel (ngrok) or prod origin — Vapi posts events here         | yes       |
 
-† without NEWSAPI Iris falls back to a stub feed so the UI still works.
+† without NEWSAPI Eureka falls back to a stub feed so the UI still works.
 
 ## Wiring Twilio ↔ Vapi
 

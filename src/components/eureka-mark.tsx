@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * Pupil is a fixed point; the surrounding rings imply a concentric
  * isobar/weather-chart pattern, fitting the supply-chain ops theme.
  */
-export function IrisMark({
+export function EurekaMark({
   className,
   animate = true,
 }: {
@@ -16,10 +16,10 @@ export function IrisMark({
     <svg
       viewBox="0 0 40 40"
       fill="none"
-      className={cn("h-7 w-7", animate && "iris-breath", className)}
+      className={cn("h-7 w-7", animate && "eureka-breath", className)}
     >
       <defs>
-        <radialGradient id="irisIris" cx="50%" cy="48%" r="60%">
+        <radialGradient id="eurekaIris" cx="50%" cy="48%" r="60%">
           <stop offset="0%" stopColor="rgb(255 213 152)" />
           <stop offset="55%" stopColor="rgb(240 158 56)" />
           <stop offset="100%" stopColor="rgb(76 43 8)" />
@@ -43,7 +43,7 @@ export function IrisMark({
         strokeWidth="0.9"
       />
       {/* iris */}
-      <circle cx="20" cy="20" r="8.5" fill="url(#irisIris)" />
+      <circle cx="20" cy="20" r="8.5" fill="url(#eurekaIris)" />
       {/* concentric isobars over iris */}
       <circle
         cx="20"
@@ -71,12 +71,12 @@ export function IrisMark({
   );
 }
 
-export function IrisWordmark({ className }: { className?: string }) {
+export function EurekaWordmark({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-baseline gap-2.5", className)}>
-      <IrisMark className="self-center" />
+      <EurekaMark className="self-center" />
       <span className="font-display text-[22px] font-medium leading-none tracking-tight text-ink">
-        iris
+        eureka
         <span className="text-amber">.</span>
       </span>
     </div>

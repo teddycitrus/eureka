@@ -135,7 +135,7 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
                   add a human to the call tree
                 </h3>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
-                  Iris will dial them when an alert ≥ medium hits a mapped supplier.
+                  Eureka will dial them when an alert ≥ medium hits a mapped supplier.
                 </p>
               </div>
 
@@ -198,7 +198,7 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
                       className="h-3.5 w-3.5 accent-amber"
                     />
                     <span className="font-mono text-[10px] uppercase tracking-chart">
-                      dialable by iris
+                      dialable by eureka
                     </span>
                   </label>
                 </Field>

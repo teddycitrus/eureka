@@ -12,11 +12,11 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
 
       <div className="flex items-center gap-3">
         <label className="group relative flex items-center">
-          <Search className="absolute left-3 h-4 w-4 text-ink-dim group-focus-within:text-iris-300" />
+          <Search className="absolute left-3 h-4 w-4 text-ink-dim group-focus-within:text-eureka-300" />
           <input
             type="search"
             placeholder="Search suppliers, signals, contacts…"
-            className="h-9 w-72 rounded-lg border border-line bg-bg-raised/60 pl-9 pr-3 text-sm text-ink placeholder:text-ink-dim focus:border-iris-500 focus:outline-none focus:ring-2 focus:ring-iris-500/30"
+            className="h-9 w-72 rounded-lg border border-line bg-bg-raised/60 pl-9 pr-3 text-sm text-ink placeholder:text-ink-dim focus:border-eureka-500 focus:outline-none focus:ring-2 focus:ring-eureka-500/30"
           />
         </label>
         <div className="flex items-center gap-2 rounded-lg border border-line bg-bg-raised/60 px-3 py-1.5 text-xs text-ink-muted">

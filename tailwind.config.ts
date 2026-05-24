@@ -23,9 +23,8 @@ export default {
           warm: rgb("--fg"),
         },
         // ── Brand & accents ──────────────────────────────────────
-        // "iris-*" kept as token names so existing components don't break;
-        // the values are now warm amber tones (instrument-panel feel).
-        iris: {
+        // "eureka-*" token names map onto warm amber values (instrument-panel feel).
+        eureka: {
           50: rgb("--amber-50"),
           100: rgb("--amber-100"),
           200: rgb("--amber-200"),

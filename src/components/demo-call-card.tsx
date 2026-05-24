@@ -174,7 +174,7 @@ export function DemoCallCard() {
         </span>
       </div>
       <p className="font-mono text-[10px] leading-relaxed text-ink-muted">
-        iris will phone your number with a 30-second briefing. one call per
+        eureka will phone your number with a 30-second briefing. one call per
         number per day. us · uk · au only.
       </p>
       <input

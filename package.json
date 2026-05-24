@@ -1,8 +1,8 @@
 {
-  "name": "iris",
+  "name": "eureka",
   "version": "0.1.0",
   "private": true,
-  "description": "Iris — supply-chain risk intelligence with interactive voice agents",
+  "description": "Eureka — supply-chain risk intelligence with interactive voice agents",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -17,6 +17,7 @@
     "@libsql/client": "^0.8.1",
     "@prisma/adapter-libsql": "^5.22.0",
     "@prisma/client": "5.22.0",
+    "claude": "^0.1.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",

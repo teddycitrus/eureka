@@ -49,8 +49,8 @@ export const POST = guard({
       data: {
         title: scenario.title,
         summary: scenario.summary,
-        url: `https://test.iris.local/incident/${Date.now()}`,
-        source: "Iris Test Harness",
+        url: `https://test.eureka.local/incident/${Date.now()}`,
+        source: "Eureka Test Harness",
         publishedAt: new Date(),
         region: supplier.region,
         topics: JSON.stringify(scenario.topics),

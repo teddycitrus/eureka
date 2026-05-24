@@ -22,7 +22,7 @@ export default async function ContactsPage() {
     <div className="flex flex-col">
       <Topbar
         title="Contacts"
-        subtitle="People Iris can dial when a supplier risk lands. Lower escalation = first."
+        subtitle="People Eureka can dial when a supplier risk lands. Lower escalation = first."
       />
       <div className="space-y-3 p-8">
         <div className="flex items-center justify-between">
@@ -34,7 +34,7 @@ export default async function ContactsPage() {
 
         {contacts.length === 0 && (
           <div className="glass rounded-2xl p-8 text-center text-ink-muted">
-            No contacts yet — click <span className="text-iris-200">New contact</span> to add one.
+            No contacts yet — click <span className="text-eureka-200">New contact</span> to add one.
           </div>
         )}
         {contacts.map((c) => (
@@ -43,7 +43,7 @@ export default async function ContactsPage() {
             className="glass flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl p-5"
           >
             <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full border border-iris-500/30 bg-bg-card text-iris-200">
+              <div className="grid h-10 w-10 place-items-center rounded-full border border-eureka-500/30 bg-bg-card text-eureka-200">
                 {c.name
                   .split(" ")
                   .map((p) => p[0])
@@ -58,7 +58,7 @@ export default async function ContactsPage() {
 
             <div className="flex flex-col gap-1 text-xs text-ink-muted">
               <span className="inline-flex items-center gap-1.5">
-                <Phone className="h-3 w-3 text-iris-300" />
+                <Phone className="h-3 w-3 text-eureka-300" />
                 <span className="font-mono text-ink">{c.phone}</span>
               </span>
               {c.email && (

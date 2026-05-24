@@ -25,7 +25,7 @@ export default async function NewsPage() {
           <form action="/api/news/ingest" method="post">
             <button
               type="submit"
-              className="rounded-lg border border-line bg-bg-raised/60 px-3 py-1.5 text-xs text-ink-muted hover:border-iris-500/40 hover:text-ink"
+              className="rounded-lg border border-line bg-bg-raised/60 px-3 py-1.5 text-xs text-ink-muted hover:border-eureka-500/40 hover:text-ink"
             >
               ingest now
             </button>
@@ -50,7 +50,7 @@ export default async function NewsPage() {
                   href={n.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="ml-auto inline-flex items-center gap-1 text-xs text-ink-muted hover:text-iris-200"
+                  className="ml-auto inline-flex items-center gap-1 text-xs text-ink-muted hover:text-eureka-200"
                 >
                   open <ExternalLink className="h-3 w-3" />
                 </a>
@@ -67,7 +67,7 @@ export default async function NewsPage() {
                   </span>
                 ))}
                 {n.alerts.length > 0 && (
-                  <span className="ml-auto text-[11px] text-iris-300">
+                  <span className="ml-auto text-[11px] text-eureka-300">
                     {n.alerts.length} alert{n.alerts.length === 1 ? "" : "s"} ·{" "}
                     {n.alerts.map((a) => a.supplier.name).join(", ")}
                   </span>

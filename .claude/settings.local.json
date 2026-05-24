@@ -18,7 +18,9 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(npx prisma *)",
       "Bash(echo \"EXIT=$?\")",
-      "Bash(sqlite3 --version)"
+      "Bash(sqlite3 --version)",
+      "Bash(npx tsc *)",
+      "Bash(git check-ignore *)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -25,7 +25,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "iris — supply intelligence",
+  title: "eureka — supply intelligence",
   description: "Live supply-chain risk awareness with interactive voice agents.",
 };
 

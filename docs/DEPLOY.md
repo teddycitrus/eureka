@@ -1,4 +1,4 @@
-# Deploying Iris to Vercel (free tier)
+# Deploying Eureka to Vercel (free tier)
 
 Stack: **Vercel Hobby** (host) + **Turso** (database) + **Upstash Redis** (rate limiting). All three have free tiers that comfortably cover a portfolio demo.
 
@@ -20,9 +20,9 @@ The original `.env` lived on disk and is now considered compromised. Rotate firs
 
 ```bash
 # https://turso.tech — sign up, install CLI
-turso db create iris-prod
-turso db show iris-prod --url        # → TURSO_DATABASE_URL
-turso db tokens create iris-prod     # → TURSO_AUTH_TOKEN
+turso db create eureka-prod
+turso db show eureka-prod --url      # → TURSO_DATABASE_URL
+turso db tokens create eureka-prod   # → TURSO_AUTH_TOKEN
 ```
 
 Push the schema:
@@ -49,7 +49,7 @@ Without this the rate limits still work locally but won't share state across ser
 ## 4. Push the repo + import on Vercel
 
 ```bash
-git remote add origin git@github.com:<you>/iris.git
+git remote add origin git@github.com:<you>/eureka.git
 git push -u origin main
 ```
 

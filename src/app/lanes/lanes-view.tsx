@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { IrisMark } from "@/components/iris-mark";
+import { EurekaMark } from "@/components/eureka-mark";
 import { TestFireButton } from "@/components/test-fire-button";
 import { DemoCallCard } from "@/components/demo-call-card";
 import { Window } from "@/components/window";
@@ -162,10 +162,10 @@ export function LanesView() {
         className="flex shrink-0 items-center justify-between border-b border-line/70 bg-bg-raised/40 px-6 py-3 backdrop-blur"
       >
         <div className="flex items-center gap-4">
-          <IrisMark className="h-7 w-7" animate={false} />
+          <EurekaMark className="h-7 w-7" animate={false} />
           <div className="flex flex-col leading-none">
             <span className="font-display text-[22px] font-medium tracking-tight text-ink">
-              iris<span className="text-amber">.</span>
+              eureka<span className="text-amber">.</span>
             </span>
             <span className="mt-1 font-mono text-[10px] uppercase tracking-chart text-ink-dim">
               no. 01 · {today} · supply ops

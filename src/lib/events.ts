@@ -4,7 +4,7 @@
  * For multi-instance prod you'd swap this for Redis pub/sub or similar.
  */
 
-export type IrisEvent =
+export type EurekaEvent =
   | { type: "alert.created"; alertId: string; supplierId: string; severity: string }
   | { type: "alert.updated"; alertId: string; status: string; decision?: string | null }
   | { type: "shipment.created"; shipmentId: string }
@@ -13,11 +13,11 @@ export type IrisEvent =
   | { type: "call.outcome"; callId: string; outcome: string; alertId: string }
   | { type: "tick"; ts: number };
 
-type Listener = (event: IrisEvent) => void;
+type Listener = (event: EurekaEvent) => void;
 
-const g = globalThis as unknown as { __irisListeners?: Set<Listener> };
-if (!g.__irisListeners) g.__irisListeners = new Set();
-const listeners = g.__irisListeners;
+const g = globalThis as unknown as { __eurekaListeners?: Set<Listener> };
+if (!g.__eurekaListeners) g.__eurekaListeners = new Set();
+const listeners = g.__eurekaListeners;
 
 export const bus = {
   subscribe(fn: Listener): () => void {
@@ -26,7 +26,7 @@ export const bus = {
       listeners.delete(fn);
     };
   },
-  emit(event: IrisEvent): void {
+  emit(event: EurekaEvent): void {
     for (const l of listeners) {
       try {
         l(event);

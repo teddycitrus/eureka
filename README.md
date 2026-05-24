@@ -20,12 +20,12 @@
     <br />
     <a href="https://eureka-049.vercel.app"><strong>🌐 Live Demo »</strong></a>
     &middot;
-    <a href="https://github.com/teddycitrus/eureka-iris"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/teddycitrus/eureka"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/teddycitrus/eureka-iris/issues/new?labels=bug">Report Bug</a>
+    <a href="https://github.com/teddycitrus/eureka/issues/new?labels=bug">Report Bug</a>
     &middot;
-    <a href="https://github.com/teddycitrus/eureka-iris/issues/new?labels=enhancement">Request Feature</a>
+    <a href="https://github.com/teddycitrus/eureka/issues/new?labels=enhancement">Request Feature</a>
   </p>
 </div>
 
@@ -105,8 +105,8 @@ npm install npm@latest -g
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/teddycitrus/eureka-iris.git
-   cd eureka-iris
+   git clone https://github.com/teddycitrus/eureka.git
+   cd eureka
    ```
 
 2. Install dependencies
@@ -121,7 +121,7 @@ npm install npm@latest -g
 
    Required variables:
    ```env
-   DATABASE_URL="postgresql://user:password@localhost:5432/iris"
+   DATABASE_URL="postgresql://user:password@localhost:5432/eureka"
    TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    TWILIO_AUTH_TOKEN="your_auth_token"
    TWILIO_PHONE_NUMBER="+1xxxxxxxxxx"
@@ -176,7 +176,7 @@ Run `npm run db:studio` to open Prisma Studio and browse or edit records directl
 - [ ] User authentication and role-based access control so teams can collaborate with scoped permissions
 - [ ] Alerting and notification system that proactively pages analysts when a supplier's risk score crosses a configurable threshold
 
-See the [open issues](https://github.com/teddycitrus/eureka-iris/issues) for a full list of proposed features and known bugs.
+See the [open issues](https://github.com/teddycitrus/eureka/issues) for a full list of proposed features and known bugs.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -203,21 +203,21 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Project Link: [https://github.com/teddycitrus/eureka-iris](https://github.com/teddycitrus/eureka-iris)
+Project Link: [https://github.com/teddycitrus/eureka](https://github.com/teddycitrus/eureka)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & BADGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/teddycitrus/eureka-iris.svg?style=for-the-badge
-[contributors-url]: https://github.com/teddycitrus/eureka-iris/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/teddycitrus/eureka-iris.svg?style=for-the-badge
-[forks-url]: https://github.com/teddycitrus/eureka-iris/network/members
-[stars-shield]: https://img.shields.io/github/stars/teddycitrus/eureka-iris.svg?style=for-the-badge
-[stars-url]: https://github.com/teddycitrus/eureka-iris/stargazers
-[issues-shield]: https://img.shields.io/github/issues/teddycitrus/eureka-iris.svg?style=for-the-badge
-[issues-url]: https://github.com/teddycitrus/eureka-iris/issues
-[license-shield]: https://img.shields.io/github/license/teddycitrus/eureka-iris.svg?style=for-the-badge
-[license-url]: https://github.com/teddycitrus/eureka-iris/blob/main/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/teddycitrus/eureka.svg?style=for-the-badge
+[contributors-url]: https://github.com/teddycitrus/eureka/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/teddycitrus/eureka.svg?style=for-the-badge
+[forks-url]: https://github.com/teddycitrus/eureka/network/members
+[stars-shield]: https://img.shields.io/github/stars/teddycitrus/eureka.svg?style=for-the-badge
+[stars-url]: https://github.com/teddycitrus/eureka/stargazers
+[issues-shield]: https://img.shields.io/github/issues/teddycitrus/eureka.svg?style=for-the-badge
+[issues-url]: https://github.com/teddycitrus/eureka/issues
+[license-shield]: https://img.shields.io/github/license/teddycitrus/eureka.svg?style=for-the-badge
+[license-url]: https://github.com/teddycitrus/eureka/blob/main/LICENSE
 
 [Next.js-badge]: https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/

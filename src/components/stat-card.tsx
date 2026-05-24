@@ -6,16 +6,16 @@ export function StatCard({
   value,
   hint,
   icon: Icon,
-  accent = "iris",
+  accent = "eureka",
 }: {
   label: string;
   value: string | number;
   hint?: string;
   icon: LucideIcon;
-  accent?: "iris" | "cyan" | "rose" | "amber";
+  accent?: "eureka" | "cyan" | "rose" | "amber";
 }) {
   const accents: Record<string, string> = {
-    iris: "from-iris-500/30 to-iris-700/0 text-iris-200",
+    eureka: "from-eureka-500/30 to-eureka-700/0 text-eureka-200",
     cyan: "from-accent-cyan/30 to-accent-cyan/0 text-accent-cyan",
     rose: "from-accent-rose/30 to-accent-rose/0 text-accent-rose",
     amber: "from-accent-amber/30 to-accent-amber/0 text-accent-amber",
