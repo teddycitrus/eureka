@@ -20,7 +20,11 @@
       "Bash(echo \"EXIT=$?\")",
       "Bash(sqlite3 --version)",
       "Bash(npx tsc *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(curl -s https://eureka-049.vercel.app/api/alerts)",
+      "Bash(curl -s https://eureka-049.vercel.app/api/suppliers)",
+      "Bash(curl -s -o response.txt -w \"HTTP %{http_code}\\\\n\" -X POST https://eureka-049.vercel.app/api/demo/call-me -H \"content-type: application/json\" -H \"origin: https://eureka-049.vercel.app\" -d \"{\\\\\"phone\\\\\":\\\\\"+99999999999\\\\\"}\")",
+      "Bash(curl -s https://eureka-049.vercel.app/)"
     ]
   },
   "enableAllProjectMcpServers": true,
