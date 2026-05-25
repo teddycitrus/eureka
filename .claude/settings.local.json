@@ -36,7 +36,9 @@
       "Bash(git fetch *)",
       "Bash(curl -s -o /tmp/shield.svg -w \"HTTP %{http_code} bytes=%{size_download}\\\\n\" \"https://img.shields.io/github/contributors/teddycitrus/eureka.svg?style=for-the-badge\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "PowerShell(Stop-Process *)"
     ]
   },
   "enableAllProjectMcpServers": true,

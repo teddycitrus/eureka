@@ -23,3 +23,18 @@ export async function placeFallbackCall(opts: {
     method: "POST",
   });
 }
+
+/**
+ * Send an SMS via Twilio. Body is hard-capped at 320 chars (2 standard segments)
+ * to keep per-message cost predictable and avoid carrier truncation surprises.
+ * Throws on send failure — callers should wrap in try/catch since SMS is
+ * always a best-effort side-channel, never a blocking step.
+ */
+export async function sendSms(opts: { to: string; body: string }) {
+  const body = opts.body.length > 320 ? `${opts.body.slice(0, 317)}...` : opts.body;
+  return twilioClient().messages.create({
+    to: opts.to,
+    from: env.twilioNumber(),
+    body,
+  });
+}

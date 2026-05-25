@@ -5,6 +5,7 @@ import { REROUTE_PRESETS, isReroutePreset } from "@/lib/reroute";
 import { verifyVapiWebhook } from "@/lib/webhook-verify";
 import { limit, retryAfterSec } from "@/lib/rate-limit";
 import { clientIp, hashId } from "@/lib/auth";
+import { sendSms } from "@/lib/twilio";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,34 @@ export async function POST(req: NextRequest) {
   const vapiCallId = message.call?.id;
   if (!vapiCallId) return NextResponse.json({ ok: true });
 
-  const call = await db.call.findFirst({ where: { vapiCallId } });
+  // Demo calls are tracked via `metadata.kind = "demo"` rather than a DB row,
+  // since they're throwaway interactions with recruiters. Branch early so the
+  // alert-flow logic doesn't need to defend against missing DB context.
+  const metadata = (message.call?.metadata ?? {}) as {
+    kind?: string;
+    toPhone?: string;
+    callerLabel?: string;
+    supplierName?: string;
+  };
+  if (metadata.kind === "demo") {
+    if (message.type === "end-of-call-report" && metadata.toPhone) {
+      const summary = pickSummary(message);
+      const body = summary
+        ? `Eureka demo · ${summary}`
+        : `Eureka: thanks for trying the demo, ${metadata.callerLabel ?? "friend"}! That was a sample briefing on ${metadata.supplierName ?? "a tracked supplier"}.`;
+      try {
+        await sendSms({ to: metadata.toPhone, body });
+      } catch (err) {
+        console.warn("[vapi-webhook] demo sms failed", err);
+      }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  const call = await db.call.findFirst({
+    where: { vapiCallId },
+    include: { contact: true, alert: { include: { supplier: true } } },
+  });
   if (!call) return NextResponse.json({ ok: true, note: "unknown call" });
 
   switch (message.type) {
@@ -154,6 +182,29 @@ export async function POST(req: NextRequest) {
           endedAt: new Date(),
         },
       });
+
+      // Best-effort SMS recap to the on-call contact so the decision lives
+      // on their phone, not just in our DB. Failure to send is logged but
+      // does not fail the webhook (Vapi would otherwise retry the whole event).
+      if (call.contact?.phone) {
+        const summary = pickSummary(message);
+        const decisionLine = call.outcome
+          ? `Decision: ${call.outcome.toUpperCase()}.`
+          : null;
+        const supplier = call.alert?.supplier?.name;
+        const body = [
+          `Eureka briefing · ${supplier ?? "supply-chain alert"}`,
+          summary ?? "Call ended without a captured summary.",
+          decisionLine,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        try {
+          await sendSms({ to: call.contact.phone, body });
+        } catch (err) {
+          console.warn("[vapi-webhook] alert sms failed", err);
+        }
+      }
       break;
     }
 
@@ -164,10 +215,27 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
+/** Pull a usable summary string from an end-of-call payload, regardless of
+ *  which shape Vapi happens to return it under. */
+function pickSummary(message: VapiInnerMessage): string | null {
+  const candidates: Array<unknown> = [
+    message.analysis?.summary,
+    message.summary,
+    message.artifact?.analysis?.summary,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string") {
+      const trimmed = c.trim();
+      if (trimmed) return trimmed.slice(0, 280);
+    }
+  }
+  return null;
+}
+
 // ── Loose typing for the Vapi event envelope ──────────────────────
 type VapiInnerMessage = {
   type: string;
-  call?: { id: string };
+  call?: { id: string; metadata?: Record<string, unknown> };
   status?: string;
   functionCall?: {
     name: string;
@@ -176,7 +244,9 @@ type VapiInnerMessage = {
   };
   transcript?: string;
   durationSeconds?: number;
-  artifact?: { transcript?: string };
+  artifact?: { transcript?: string; analysis?: { summary?: string } };
+  analysis?: { summary?: string };
+  summary?: string;
   messages?: Array<{ role: string; message: string }>;
 };
 type VapiServerMessage = { message?: VapiInnerMessage };

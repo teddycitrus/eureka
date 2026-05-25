@@ -157,6 +157,10 @@ function buildAssistant(b: AssistantBriefing) {
     serverUrlSecret: env.webhookSecret(),
     silenceTimeoutSeconds: 25,
     maxDurationSeconds: 300,
+    analysisPlan: {
+      summaryPrompt:
+        "In 2-3 sentences, summarise: which supplier/region was discussed, what decision the contact gave (approve/hold/escalate/dismiss), and any escalation target or next-step they named. Plain text, no preamble.",
+    },
   };
 }
 
@@ -266,11 +270,29 @@ export async function placeDemoCall(opts: {
     endCallFunctionEnabled: true,
     silenceTimeoutSeconds: 15,
     maxDurationSeconds: opts.maxSeconds,
+    // Webhook so the demo can trigger a follow-up SMS summary at end-of-call.
+    serverUrl: `${env.publicBaseUrl()}/api/calls/vapi-webhook`,
+    serverUrlSecret: env.webhookSecret(),
+    analysisPlan: {
+      summaryPrompt: [
+        `In 2-3 sentences, summarise the sample supply-chain briefing this caller (${callerLabel}) just heard about ${b.supplierName}.`,
+        "Include the headline of the risk and one concrete next-step recommendation. Plain text, no preamble.",
+      ].join(" "),
+    },
   };
 
   const body: Record<string, unknown> = {
     phoneNumberId: env.vapiPhoneNumberId(),
     customer: { number: opts.toPhone },
+    // Metadata is echoed back on every webhook event so the handler can tell
+    // demo calls apart from production alert calls (which it looks up in the
+    // DB by vapiCallId) and knows where to text the summary.
+    metadata: {
+      kind: "demo",
+      toPhone: opts.toPhone,
+      callerLabel,
+      supplierName: b.supplierName,
+    },
     assistant,
   };
 

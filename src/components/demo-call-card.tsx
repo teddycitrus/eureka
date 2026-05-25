@@ -174,8 +174,8 @@ export function DemoCallCard() {
         </span>
       </div>
       <p className="font-mono text-[10px] leading-relaxed text-ink-muted">
-        eureka will phone your number with a 30-second briefing. one call per
-        number per day. us · uk · au only.
+        eureka will phone your number with a 30-second briefing, then text a
+        short summary. one call per number per day. us · uk · au only.
       </p>
       <input
         type="text"
