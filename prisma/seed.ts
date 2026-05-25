@@ -156,6 +156,20 @@ async function main() {
     },
   });
 
+  const news3 = await db.newsItem.create({
+    data: {
+      title: "Rotterdam port operators flag 4-day go-slow over automation dispute",
+      summary:
+        "FNV union representatives confirm reduced crane throughput at Maasvlakte II terminal from Monday. Carriers warn EU-bound containers face 3-5 day cascade delays into next week's bookings.",
+      url: "https://example.com/news/rotterdam-port-goslow",
+      source: "Financial Times",
+      publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
+      region: "Western Europe",
+      topics: JSON.stringify(["labor", "ports", "shipping"]),
+      riskScore: 0.58,
+    },
+  });
+
   const alert1 = await db.alert.create({
     data: {
       newsId: news1.id,
@@ -175,6 +189,17 @@ async function main() {
       status: "pending",
       recommendation:
         "Validate inventory cover (current: 18 days). Freeze new battery PO commitments until strike resolves.",
+    },
+  });
+
+  await db.alert.create({
+    data: {
+      newsId: news3.id,
+      supplierId: suppliers[1].id,
+      severity: "medium",
+      status: "pending",
+      recommendation:
+        "Re-route time-critical inbound through Antwerp or Hamburg and notify customer-success of expected 3–5 day delivery slippage.",
     },
   });
 
@@ -251,8 +276,8 @@ async function main() {
   console.log("Seeded:", {
     suppliers: suppliers.length,
     contacts: contacts.length,
-    news: 2,
-    alerts: 2,
+    news: 3,
+    alerts: 3,
     shipments: shipments.length,
   });
 }

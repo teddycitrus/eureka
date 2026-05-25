@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { EurekaMark } from "@/components/eureka-mark";
-import { TestFireButton } from "@/components/test-fire-button";
 import { DemoCallCard } from "@/components/demo-call-card";
 import { Window } from "@/components/window";
 import { FourKitesLogin, type ConnectionStatus } from "@/components/fourkites-login";
@@ -126,20 +125,28 @@ export function LanesView() {
   const ready = stage.w > 320 && stage.h > 240;
 
   // Initial layout:
-  //  - wire: tall narrow column on the left
-  //  - station: short box top-right (leaves room for the demo-call card
-  //    that's anchored bottom-right of the stage)
+  //  - wire: tall narrow column on the left, extending all the way to the
+  //    bottom of the stage so its bottom edge aligns with the instruments
+  //    window's bottom (they're horizontally side-by-side, no overlap)
+  //  - station: top-right, offset down so the ok/watch/exposed/critical
+  //    legend (top-4 right-5 in the globe layer) stays visible, and
+  //    extends down to just above the demo-call card anchored bottom-right
   //  - instruments: horizontal strip docked along the bottom of the
-  //    center column
+  //    center column, tall enough for two-line stat subtext
   const layout = useMemo(() => {
     if (!ready) return null;
     const margin = 12;
     const gap = 12;
+    const stationTopReserve = 32; // clears the risk legend behind the station
+    const demoCardReserve = 230; // approx demo-card height incl. captcha state
     const wireW = Math.min(300, Math.max(240, stage.w * 0.22));
     const stationW = Math.min(480, Math.max(360, stage.w * 0.28));
-    const hudH = 110;
-    const sideH = Math.max(220, stage.h - margin * 2 - hudH - gap);
-    const stationH = Math.max(260, Math.min(300, stage.h * 0.32));
+    const hudH = 175;
+    const sideH = Math.max(220, stage.h - margin * 2);
+    const stationH = Math.max(
+      260,
+      stage.h - margin - stationTopReserve - gap - demoCardReserve,
+    );
     const centerX = margin + wireW + gap;
     const centerW = Math.max(360, stage.w - margin * 2 - wireW - stationW - gap * 2);
     return {
@@ -148,7 +155,7 @@ export function LanesView() {
         size: { width: wireW, height: sideH },
       },
       station: {
-        pos: { x: stage.w - stationW - margin, y: margin },
+        pos: { x: stage.w - stationW - margin, y: margin + stationTopReserve },
         size: { width: stationW, height: stationH },
       },
       instruments: {
@@ -234,9 +241,6 @@ export function LanesView() {
           </div>
           <div className="pointer-events-none absolute bottom-4 right-4 flex flex-col items-end gap-2">
             <DemoCallCard />
-            {process.env.NODE_ENV !== "production" && (
-              <TestFireButton variant="ghost" />
-            )}
           </div>
         </div>
 
