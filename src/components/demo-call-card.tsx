@@ -209,7 +209,10 @@ export function DemoCallCard() {
             async
             defer
           />
-          <div ref={turnstileRef} className="flex justify-center" />
+          <div
+            ref={turnstileRef}
+            className={cn("flex justify-center", captchaToken && "hidden")}
+          />
         </>
       )}
       <button
