@@ -139,7 +139,7 @@ export function LanesView() {
     const stationW = Math.min(480, Math.max(360, stage.w * 0.28));
     const hudH = 110;
     const sideH = Math.max(220, stage.h - margin * 2 - hudH - gap);
-    const stationH = Math.max(280, Math.min(340, stage.h * 0.4));
+    const stationH = Math.max(260, Math.min(300, stage.h * 0.32));
     const centerX = margin + wireW + gap;
     const centerW = Math.max(360, stage.w - margin * 2 - wireW - stationW - gap * 2);
     return {
