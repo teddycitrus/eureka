@@ -12,12 +12,15 @@ const CSP = [
   "default-src 'self'",
   // Next.js requires inline styles for streaming RSC + font preload. Same for
   // `unsafe-eval` only in dev (react-refresh). Production builds drop both.
-  "script-src 'self' 'unsafe-inline'" +
+  // challenges.cloudflare.com is required for the Turnstile widget script.
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com" +
     (process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""),
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' https://*.upstash.io https://api.vapi.ai",
+  "connect-src 'self' https://*.upstash.io https://api.vapi.ai https://challenges.cloudflare.com",
+  // Turnstile renders inside an iframe served from challenges.cloudflare.com.
+  "frame-src https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
