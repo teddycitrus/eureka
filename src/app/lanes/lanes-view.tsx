@@ -125,17 +125,21 @@ export function LanesView() {
   const today = useMemo(() => formatDate(new Date()), []);
   const ready = stage.w > 320 && stage.h > 240;
 
-  // Initial layout matches the pre-windows CSS grid:
-  // [300 wire] gap [center] gap [400 station]   with HUD docked at the
-  // bottom of the center column.
+  // Initial layout:
+  //  - wire: tall narrow column on the left
+  //  - station: short box top-right (leaves room for the demo-call card
+  //    that's anchored bottom-right of the stage)
+  //  - instruments: horizontal strip docked along the bottom of the
+  //    center column
   const layout = useMemo(() => {
     if (!ready) return null;
     const margin = 12;
     const gap = 12;
     const wireW = Math.min(300, Math.max(240, stage.w * 0.22));
-    const stationW = Math.min(400, Math.max(320, stage.w * 0.28));
+    const stationW = Math.min(480, Math.max(360, stage.w * 0.28));
     const hudH = 110;
     const sideH = Math.max(220, stage.h - margin * 2 - hudH - gap);
+    const stationH = Math.max(280, Math.min(340, stage.h * 0.4));
     const centerX = margin + wireW + gap;
     const centerW = Math.max(360, stage.w - margin * 2 - wireW - stationW - gap * 2);
     return {
@@ -145,7 +149,7 @@ export function LanesView() {
       },
       station: {
         pos: { x: stage.w - stationW - margin, y: margin },
-        size: { width: stationW, height: sideH },
+        size: { width: stationW, height: stationH },
       },
       instruments: {
         pos: { x: centerX, y: stage.h - hudH - margin },
