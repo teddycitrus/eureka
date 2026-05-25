@@ -28,7 +28,15 @@
       "Bash(curl -s -o /tmp/resp -w \"HTTP %{http_code}\\\\n\" -X POST https://eureka-049.vercel.app/api/demo/call-me -H \"content-type: application/json\" -H \"origin: https://eureka-049.vercel.app\" -d \"{\\\\\"phone\\\\\":\\\\\"+14165551212\\\\\"}\")",
       "Bash(curl -sI https://eureka-049.vercel.app/)",
       "Bash(curl -s -o /tmp/r -w \"HTTP %{http_code}\\\\n\" -X POST https://eureka-049.vercel.app/api/demo/call-me -H \"content-type: application/json\" -H \"origin: https://eureka-049.vercel.app\" -d \"{\\\\\"phone\\\\\":\\\\\"+14165551212\\\\\"}\")",
-      "Bash(curl -s https://eureka-049.vercel.app/ -o /tmp/page.html)"
+      "Bash(curl -s https://eureka-049.vercel.app/ -o /tmp/page.html)",
+      "Bash(curl -s -o /dev/null -w \"eureka-iris=%{http_code} \" https://api.github.com/repos/teddycitrus/eureka-iris)",
+      "Bash(curl -s -o /dev/null -w \"eureka=%{http_code}\\\\n\" https://api.github.com/repos/teddycitrus/eureka)",
+      "Bash(curl -s -o /dev/null -w \"eureka=%{http_code} eureka-iris=%{http_code}\\\\n\" https://api.github.com/repos/teddycitrus/eureka)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(curl -s -o /tmp/shield.svg -w \"HTTP %{http_code} bytes=%{size_download}\\\\n\" \"https://img.shields.io/github/contributors/teddycitrus/eureka.svg?style=for-the-badge\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl *)"
     ]
   },
   "enableAllProjectMcpServers": true,

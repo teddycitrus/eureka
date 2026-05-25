@@ -208,15 +208,15 @@ Project Link: [https://github.com/teddycitrus/eureka](https://github.com/teddyci
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & BADGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/teddycitrus/eureka.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/teddycitrus/eureka.svg?style=for-the-badge&cacheSeconds=60
 [contributors-url]: https://github.com/teddycitrus/eureka/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/teddycitrus/eureka.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/teddycitrus/eureka.svg?style=for-the-badge&cacheSeconds=60
 [forks-url]: https://github.com/teddycitrus/eureka/network/members
-[stars-shield]: https://img.shields.io/github/stars/teddycitrus/eureka.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/teddycitrus/eureka.svg?style=for-the-badge&cacheSeconds=60
 [stars-url]: https://github.com/teddycitrus/eureka/stargazers
-[issues-shield]: https://img.shields.io/github/issues/teddycitrus/eureka.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/teddycitrus/eureka.svg?style=for-the-badge&cacheSeconds=60
 [issues-url]: https://github.com/teddycitrus/eureka/issues
-[license-shield]: https://img.shields.io/github/license/teddycitrus/eureka.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/teddycitrus/eureka.svg?style=for-the-badge&cacheSeconds=60
 [license-url]: https://github.com/teddycitrus/eureka/blob/main/LICENSE
 
 [Next.js-badge]: https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
