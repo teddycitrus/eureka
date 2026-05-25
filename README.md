@@ -18,8 +18,8 @@
   <p align="center">
     Supply-chain risk intelligence with interactive voice agents
     <br />
-    <a href="https://eureka-049.vercel.app"><strong>🌐 Live Demo »</strong></a>
-    &middot;
+    <a href="https://eureka-049.vercel.app"><strong>🌐 Live Demo »</strong></a> — try the <em>ring my phone</em> button: Eureka will call you with a real briefing, then text a summary.
+    <br />
     <a href="https://github.com/teddycitrus/eureka"><strong>Explore the docs »</strong></a>
     <br />
     <br />
@@ -69,7 +69,7 @@ Eureka is built to layer on top of [FourKites Movement](https://www.fourkites.co
 
 Key capabilities:
 * **Interactive globe**: visualise supplier locations and risk concentrations across the world in real time using a WebGL-powered 3D map
-* **Voice intelligence**: Twilio-backed voice agents let you query the risk database hands-free; Eureka calls you and walks you through findings conversationally
+* **Voice intelligence**: Twilio-backed voice agents let you query the risk database hands-free; Eureka calls you and walks you through findings conversationally, then drops a 2–3 sentence SMS recap with the captured decision into the recipient's inbox for record-keeping
 * **Structured risk data**: a Prisma-managed database stores ingested supply-chain events, vendor profiles, and risk scores, queryable via a typed API layer
 * **Type-safe throughout**: end-to-end TypeScript with Zod schema validation ensures data integrity from ingest scripts to the UI
 
@@ -156,7 +156,11 @@ The home screen renders a live 3D globe. Supplier nodes are plotted by geography
 
 **Voice query**
 
-When critical incidents are detected, Eureka triggers a Twilio outbound call and reads back a synthesized briefing followed by recommended actions.
+When critical incidents are detected, Eureka triggers a Twilio outbound call and reads back a synthesized briefing followed by recommended actions. After the call ends, VAPI's end-of-call summary is forwarded to Twilio as an SMS so the contact has a written record of the decision on their phone.
+
+**Try it live**
+
+The deployed instance at [eureka-049.vercel.app](https://eureka-049.vercel.app) exposes a public *ring my phone* button. Enter a US/UK/AU number, solve a one-tap Cloudflare Turnstile check, and Eureka will dial you with a real briefing pulled from the seeded supplier graph — then text you a short summary once the call wraps. Rate-limited to one call per number per day and a configurable global cap, so cost stays predictable.
 
 **Ingest pipeline**
 
@@ -173,6 +177,8 @@ Run `npm run db:studio` to open Prisma Studio and browse or edit records directl
 
 - [x] Interactive 3D globe with supplier node visualisation powered by `react-globe.gl` and Three.js
 - [x] Twilio voice agent integration for hands-free, conversational risk queries
+- [x] Public *ring my phone* demo live at [eureka-049.vercel.app](https://eureka-049.vercel.app), gated by Cloudflare Turnstile and per-IP / per-phone / global daily caps
+- [x] Post-call SMS recap so the captured decision and supplier context live on the contact's phone, not just in the dashboard
 - [ ] User authentication and role-based access control so teams can collaborate with scoped permissions
 - [ ] Alerting and notification system that proactively pages analysts when a supplier's risk score crosses a configurable threshold
 
