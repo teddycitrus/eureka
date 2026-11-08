@@ -1,33 +1,46 @@
-"use client";
+import Link from "next/link";
+import { EurekaMark } from "./eureka-mark";
 
-import { Search, Activity } from "lucide-react";
+const NAV = [
+  { href: "/", label: "Lanes" },
+  { href: "/alerts", label: "Alerts" },
+  { href: "/calls", label: "Calls" },
+  { href: "/contacts", label: "Contacts" },
+  { href: "/suppliers", label: "Suppliers" },
+  { href: "/news", label: "Signals" },
+];
 
 export function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line/60 px-8 py-5">
-      <div>
-        <h1 className="font-display text-2xl tracking-tight text-ink">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-ink-muted">{subtitle}</p>}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <label className="group relative flex items-center">
-          <Search className="absolute left-3 h-4 w-4 text-ink-dim group-focus-within:text-eureka-300" />
-          <input
-            type="search"
-            placeholder="Search suppliers, signals, contacts…"
-            className="h-9 w-72 rounded-lg border border-line bg-bg-raised/60 pl-9 pr-3 text-sm text-ink placeholder:text-ink-dim focus:border-eureka-500 focus:outline-none focus:ring-2 focus:ring-eureka-500/30"
-          />
-        </label>
-        <div className="flex items-center gap-2 rounded-lg border border-line bg-bg-raised/60 px-3 py-1.5 text-xs text-ink-muted">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inset-0 rounded-full bg-accent-cyan opacity-75 pulse-ring" />
-            <span className="relative h-2 w-2 rounded-full bg-accent-cyan" />
-          </span>
-          <Activity className="h-3.5 w-3.5 text-accent-cyan" />
-          <span>live</span>
+    <>
+      <header className="border-b border-line">
+        <div className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-4">
+          <Link href="/" className="flex items-center gap-2" aria-label="Eureka, back to the lanes">
+            <EurekaMark />
+            <span className="text-base font-semibold text-ink">Eureka</span>
+          </Link>
+          <nav className="flex gap-4 overflow-x-auto text-sm">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                aria-current={n.label === title ? "page" : undefined}
+                className={
+                  n.label === title
+                    ? "relative py-4 text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-accent"
+                    : "py-4 text-ink-muted transition-colors hover:text-ink"
+                }
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
         </div>
+      </header>
+      <div className="mx-auto w-full max-w-[1120px] px-4 pb-4 pt-8">
+        <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-ink-soft">{subtitle}</p>}
       </div>
-    </header>
+    </>
   );
 }

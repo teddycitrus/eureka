@@ -5,9 +5,9 @@ import { Rnd } from "react-rnd";
 import { Minus, Maximize2, Minimize2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const CHROME_HEIGHT = 32;
-const ANIM_MS = 380;
-const EASE = "cubic-bezier(.16,1,.3,1)";
+const CHROME_HEIGHT = 40;
+const ANIM_MS = 320;
+const EASE = "cubic-bezier(.2,.8,.2,1)";
 
 type Pos = { x: number; y: number };
 type Size = { width: number; height: number };
@@ -27,6 +27,10 @@ export type WindowProps = {
   titleAccessory?: React.ReactNode;
   /** If provided, adds a close (X) button to the titlebar. */
   onClose?: () => void;
+  /** Render in the page flow instead of floating (narrow screens). */
+  docked?: boolean;
+  /** A dialog: draggable, but without minimize and maximize. */
+  dialog?: boolean;
   children: React.ReactNode;
 };
 
@@ -48,6 +52,8 @@ export function Window({
   className,
   titleAccessory,
   onClose,
+  docked = false,
+  dialog = false,
   children,
 }: WindowProps) {
   const [pos, setPos] = useState<Pos>(defaultPos);
@@ -70,7 +76,8 @@ export function Window({
   }, []);
 
   const animate = (mut: () => void) => {
-    setAnimating(true);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) setAnimating(true);
     mut();
     window.setTimeout(() => setAnimating(false), ANIM_MS + 40);
   };
@@ -106,15 +113,60 @@ export function Window({
         }
         restoreFromMax.current = { pos, size };
         setIsMax(true);
-        const t = maxInsets?.top ?? 12;
-        const r = maxInsets?.right ?? 12;
-        const b = maxInsets?.bottom ?? 12;
-        const l = maxInsets?.left ?? 12;
+        const t = maxInsets?.top ?? 16;
+        const r = maxInsets?.right ?? 16;
+        const b = maxInsets?.bottom ?? 16;
+        const l = maxInsets?.left ?? 16;
         setPos({ x: l, y: t });
         setSize({ width: vp.w - l - r, height: vp.h - t - b });
       }
     });
   };
+
+  const titlebar = (
+    <div
+      className={cn(
+        "window-titlebar flex shrink-0 select-none items-center justify-between gap-3 border-b border-rule pl-4 pr-2",
+        !docked && "cursor-grab active:cursor-grabbing",
+        isMax && "cursor-default active:cursor-default",
+      )}
+      style={{ height: CHROME_HEIGHT }}
+      onDoubleClick={docked || dialog ? undefined : toggleMax}
+    >
+      <div className="flex min-w-0 items-baseline gap-2">
+        <h2 className="truncate text-sm font-semibold text-ink">{title}</h2>
+        {titleAccessory && (
+          <span className="truncate text-xs text-ink-muted">{titleAccessory}</span>
+        )}
+      </div>
+      <div className="flex items-center text-ink-muted">
+        {!docked && !dialog && (
+          <>
+            <Ctl onClick={toggleMin} title={isMin ? `Restore ${title}` : `Minimize ${title}`}>
+              <Minus className="h-3.5 w-3.5" />
+            </Ctl>
+            <Ctl onClick={toggleMax} title={isMax ? `Restore ${title}` : `Maximize ${title}`}>
+              {isMax ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            </Ctl>
+          </>
+        )}
+        {onClose && (
+          <Ctl onClick={onClose} title={`Close ${title}`}>
+            <X className="h-3.5 w-3.5" />
+          </Ctl>
+        )}
+      </div>
+    </div>
+  );
+
+  if (docked) {
+    return (
+      <section className={cn("panel flex flex-col overflow-hidden rounded-md", className)}>
+        {titlebar}
+        <div className="min-h-0 flex-1">{children}</div>
+      </section>
+    );
+  }
 
   return (
     <Rnd
@@ -136,6 +188,7 @@ export function Window({
       enableResizing={!isMin && !isMax}
       disableDragging={isMax}
       dragHandleClassName="window-titlebar"
+      cancel="button"
       style={{
         zIndex,
         transition: animating
@@ -143,53 +196,11 @@ export function Window({
           : undefined,
       }}
     >
-      <div
+      <section
         onMouseDownCapture={onFocus}
-        className={cn(
-          "glass flex h-full w-full flex-col overflow-hidden rounded-lg",
-          className,
-        )}
+        className={cn("panel flex h-full w-full flex-col overflow-hidden rounded-md", className)}
       >
-        {/* ── Titlebar ─────────────────────────────────────────── */}
-        <div
-          className={cn(
-            "window-titlebar flex h-8 shrink-0 cursor-grab select-none items-center justify-between gap-2 border-b border-line/80 bg-bg-raised/60 px-3 active:cursor-grabbing",
-            isMax && "cursor-default active:cursor-default",
-          )}
-          onDoubleClick={toggleMax}
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="grid grid-cols-2 gap-[3px]" aria-hidden>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <span key={i} className="h-1 w-1 bg-ink-dim/70" />
-              ))}
-            </span>
-            <span className="truncate font-mono text-[10px] uppercase tracking-chart text-ink-warm">
-              {title}
-            </span>
-            {titleAccessory && (
-              <span className="ml-2 truncate text-ink-dim">{titleAccessory}</span>
-            )}
-          </div>
-          <div className="flex items-center gap-0.5 text-ink-dim">
-            <Ctl onClick={toggleMin} title={isMin ? "restore" : "minimize"}>
-              <Minus className="h-3 w-3" />
-            </Ctl>
-            <Ctl onClick={toggleMax} title={isMax ? "restore" : "maximize"}>
-              {isMax ? (
-                <Minimize2 className="h-3 w-3" />
-              ) : (
-                <Maximize2 className="h-3 w-3" />
-              )}
-            </Ctl>
-            {onClose && (
-              <Ctl onClick={onClose} title="close" tone="risk">
-                <X className="h-3 w-3" />
-              </Ctl>
-            )}
-          </div>
-        </div>
-
+        {titlebar}
         {/* ── Body (collapses on minimize) ─────────────────────── */}
         <div
           className="min-h-0 flex-1 overflow-hidden"
@@ -201,7 +212,7 @@ export function Window({
         >
           {children}
         </div>
-      </div>
+      </section>
     </Rnd>
   );
 }
@@ -209,25 +220,22 @@ export function Window({
 function Ctl({
   onClick,
   title,
-  tone = "amber",
   children,
 }: {
   onClick: () => void;
   title: string;
-  tone?: "amber" | "risk";
   children: React.ReactNode;
 }) {
   return (
     <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         onClick();
       }}
       title={title}
-      className={cn(
-        "grid h-5 w-5 place-items-center transition-colors hover:bg-bg-hover",
-        tone === "amber" ? "hover:text-amber" : "hover:text-risk-critical",
-      )}
+      aria-label={title}
+      className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-raised hover:text-ink"
     >
       {children}
     </button>

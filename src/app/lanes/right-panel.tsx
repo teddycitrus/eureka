@@ -1,80 +1,61 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Activity,
-  Siren,
-  PhoneCall,
-  Users,
-  Loader2,
-  ExternalLink,
-  Building2,
-  PhoneOutgoing,
-  Mail,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { ActivityRail } from "./activity-rail";
 import type { ActivityEntry } from "./lanes-view";
 import { CallButton } from "@/app/alerts/call-button";
 import { ContactForm } from "@/app/contacts/contact-form";
 import { DeleteContactButton } from "@/app/contacts/delete-button";
 import { RiskBadge } from "@/components/risk-badge";
-import { cn, parseList, shortRelTime } from "@/lib/utils";
+import { bySeverity, cn, parseList, shortRelTime } from "@/lib/utils";
 
-type Tab = "live" | "alerts" | "calls" | "contacts";
+type Tab = "alerts" | "calls" | "contacts" | "live";
 
-const TABS: Array<{
-  id: Tab;
-  label: string;
-  icon: LucideIcon;
-  serif: string;
-}> = [
-  { id: "live", label: "the log", icon: Activity, serif: "the log" },
-  { id: "alerts", label: "risks", icon: Siren, serif: "risks at hand" },
-  { id: "calls", label: "voice ops", icon: PhoneCall, serif: "voice ops" },
-  { id: "contacts", label: "call tree", icon: Users, serif: "the call tree" },
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "alerts", label: "Risks" },
+  { id: "calls", label: "Calls" },
+  { id: "contacts", label: "Call tree" },
+  { id: "live", label: "Log" },
 ];
 
 export function RightPanel({
   activity,
+  openRisks,
+  selectedAlertId,
   onRefreshNeeded,
 }: {
   activity: ActivityEntry[];
+  openRisks: number;
+  selectedAlertId: string | null;
   onRefreshNeeded: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>("live");
+  const [tab, setTab] = useState<Tab>("alerts");
   const tick = activity.length;
-  const current = TABS.find((t) => t.id === tab) ?? TABS[0];
 
   return (
     <div className="flex h-full flex-col">
-      {/* ── editorial header (per-tab serif) ──────────────────── */}
-      <div className="border-b border-line/80 px-5 py-3">
-        <div className="font-display text-base italic text-ink-warm">
-          {current.serif}
-        </div>
-      </div>
-
-      {/* ── underline tab strip ───────────────────────────────── */}
-      <div className="flex items-center gap-5 border-b border-line/80 px-5">
-        {TABS.map(({ id, label, icon: Icon }) => {
+      <div role="tablist" className="flex shrink-0 items-end gap-5 border-b border-rule px-4">
+        {TABS.map(({ id, label }) => {
           const active = tab === id;
           return (
             <button
               key={id}
+              role="tab"
+              aria-selected={active}
               onClick={() => setTab(id)}
               className={cn(
-                "group relative flex items-center gap-1.5 py-2.5 font-mono text-[10px] uppercase tracking-chart transition",
-                active ? "text-amber" : "text-ink-dim hover:text-ink",
+                "relative -mb-px py-2.5 text-sm transition-colors",
+                active ? "text-ink" : "text-ink-muted hover:text-ink",
               )}
             >
-              <Icon className="h-3 w-3" />
               {label}
+              {id === "alerts" && openRisks > 0 && (
+                <span className="ml-1.5 tabular-nums text-ink-soft">{openRisks}</span>
+              )}
               <span
-                className={cn(
-                  "absolute inset-x-0 -bottom-px h-px transition",
-                  active ? "bg-amber" : "bg-transparent",
-                )}
+                className={cn("absolute inset-x-0 bottom-0 h-px", active ? "bg-accent" : "bg-transparent")}
+                aria-hidden
               />
             </button>
           );
@@ -82,8 +63,10 @@ export function RightPanel({
       </div>
 
       <div className="min-h-0 flex-1">
-        {tab === "live" && <ActivityRail embedded entries={activity} />}
-        {tab === "alerts" && <AlertsTab tick={tick} onChanged={onRefreshNeeded} />}
+        {tab === "live" && <ActivityRail entries={activity} />}
+        {tab === "alerts" && (
+          <AlertsTab tick={tick} selectedId={selectedAlertId} onChanged={onRefreshNeeded} />
+        )}
         {tab === "calls" && <CallsTab tick={tick} />}
         {tab === "contacts" && <ContactsTab tick={tick} />}
       </div>
@@ -98,24 +81,42 @@ type AlertRow = {
   status: string;
   recommendation: string;
   createdAt: string;
-  news: { title: string; topics: string; url: string };
+  news: { title: string; topics: string; url: string; source?: string };
   supplier: {
     name: string;
     region: string;
-    contacts: Array<{ contact: { name: string; receiveCalls: boolean; escalation: number } }>;
+    contacts: Array<{
+      contact: { name: string; role: string; receiveCalls: boolean; escalation: number };
+    }>;
   };
 };
 
-function AlertsTab({ tick, onChanged }: { tick: number; onChanged: () => void }) {
+function AlertsTab({
+  tick,
+  selectedId,
+  onChanged,
+}: {
+  tick: number;
+  selectedId: string | null;
+  onChanged: () => void;
+}) {
   const [rows, setRows] = useState<AlertRow[] | null>(null);
+  const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/alerts", { cache: "no-store" })
       .then((r) => r.json())
-      .then(setRows)
-      .catch(() => setRows([]));
+      .then((d: AlertRow[]) => {
+        setRows(d);
+        setFailed(false);
+      })
+      .catch(() => setFailed(true));
   }, [tick]);
+
+  useEffect(() => {
+    if (selectedId) document.getElementById(`risk-${selectedId}`)?.scrollIntoView({ block: "nearest" });
+  }, [selectedId, rows]);
 
   async function patch(id: string, status: string) {
     setBusy(id);
@@ -126,105 +127,86 @@ function AlertsTab({ tick, onChanged }: { tick: number; onChanged: () => void })
     });
     setBusy(null);
     onChanged();
-    setRows(null);
+    setRows((r) => r?.filter((a) => a.id !== id) ?? null);
   }
 
-  if (rows === null) return <PanelEmpty icon={Loader2} label="loading risks" spin />;
+  if (failed && !rows) return <PanelNote>Could not load risks. They reload with the next event.</PanelNote>;
+  if (rows === null) return <RowsLoading />;
   if (rows.length === 0)
-    return <PanelEmpty icon={Siren} label="no live risks." />;
+    return <PanelNote>No open risks. Nothing needs a call right now.</PanelNote>;
+
+  const sorted = [...rows].sort(bySeverity);
 
   return (
-    <div className="h-full space-y-2 overflow-y-auto p-3">
-      {rows.map((a, idx) => {
+    <ul className="h-full divide-y divide-rule overflow-y-auto">
+      {sorted.map((a) => {
         const oncall = a.supplier.contacts
           .filter((c) => c.contact.receiveCalls)
           .sort((x, y) => x.contact.escalation - y.contact.escalation)[0]?.contact;
+        const topics = parseList<string>(a.news.topics).slice(0, 4);
+        const active = a.id === selectedId;
         return (
-          <article
+          <li
             key={a.id}
-            className="rounded-lg border border-line/70 bg-bg-card/50 p-3.5"
+            id={`risk-${a.id}`}
+            className={cn("relative px-4 py-3.5", active && "bg-raised")}
           >
-            <div className="flex items-center justify-between gap-2">
+            {active && <span className="absolute inset-y-0 left-0 w-px bg-accent" aria-hidden />}
+            <div className="flex items-center gap-3">
               <RiskBadge severity={a.severity} />
-              <span className="font-mono text-[10px] uppercase tracking-chart text-ink-dim">
-                {String(idx + 1).padStart(2, "0")} · {a.status} · {shortRelTime(a.createdAt)}
+              <span className="text-xs text-ink-muted">
+                {a.status === "pending" ? "Waiting on a decision" : capital(a.status)}, {shortRelTime(a.createdAt)}
               </span>
               <a
                 href={a.news.url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-ink-dim hover:text-amber"
+                className="ml-auto inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
               >
-                <ExternalLink className="h-3 w-3" />
+                Source <ExternalLink className="h-3 w-3" aria-hidden />
               </a>
             </div>
-            <h3 className="mt-2.5 line-clamp-2 font-display text-[15px] leading-snug text-ink">
-              {a.news.title}
-            </h3>
-            <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-ink-muted">
-              {a.recommendation}
+            <h3 className="mt-1.5 line-clamp-2 text-base font-medium text-ink">{a.news.title}</h3>
+            <p className="mt-1 text-xs text-ink-soft">
+              {a.supplier.name}
+              {topics.length > 0 && <span className="text-ink-muted">, {topics.join(", ")}</span>}
             </p>
-            <div className="mt-2.5 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-chart text-ink-dim">
-              <Building2 className="h-3 w-3" />
-              <span className="truncate text-ink-warm normal-case tracking-normal">
-                {a.supplier.name}
-              </span>
-            </div>
-            {parseList<string>(a.news.topics).length > 0 && (
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                {parseList<string>(a.news.topics)
-                  .slice(0, 4)
-                  .map((t) => (
-                    <span
-                      key={t}
-                      className="border-l border-amber/50 bg-bg-raised/50 px-1.5 py-0 font-mono text-[9px] uppercase tracking-chart text-ink-muted"
-                    >
-                      {t}
-                    </span>
-                  ))}
-              </div>
-            )}
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-line/60 pt-2.5">
-              <div className="flex gap-1.5">
-                <ActionButton
-                  onClick={() => patch(a.id, "dismissed")}
-                  disabled={busy === a.id}
-                >
-                  dismiss
-                </ActionButton>
-                <ActionButton
+            <p className="mt-2 text-sm text-ink-soft">{a.recommendation}</p>
+            <p className="mt-2 text-xs text-ink-muted">
+              {oncall ? (
+                <>
+                  On call: <span className="text-ink-soft">{oncall.name}</span>, {oncall.role}, level{" "}
+                  {oncall.escalation}
+                </>
+              ) : (
+                <span className="text-warning">No one on the call tree for this supplier</span>
+              )}
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              {oncall && <CallButton alertId={a.id} contactName={oncall.name} />}
+              <span className="ml-auto flex">
+                <button
+                  type="button"
+                  className="btn btn-text h-7 text-xs"
                   onClick={() => patch(a.id, "resolved")}
                   disabled={busy === a.id}
                 >
-                  resolve
-                </ActionButton>
-              </div>
-              {oncall && <CallButton alertId={a.id} contactName={oncall.name} />}
+                  Resolve
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-text h-7 text-xs"
+                  onClick={() => patch(a.id, "dismissed")}
+                  disabled={busy === a.id}
+                >
+                  Dismiss
+                </button>
+              </span>
             </div>
-          </article>
+          </li>
         );
       })}
-    </div>
-  );
-}
-
-function ActionButton({
-  onClick,
-  disabled,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="border border-line bg-bg-raised/40 px-2 py-1 font-mono text-[10px] uppercase tracking-chart text-ink-muted transition hover:border-amber/40 hover:text-ink disabled:opacity-50"
-    >
-      {children}
-    </button>
+    </ul>
   );
 }
 
@@ -240,74 +222,76 @@ type CallRow = {
   alert: { supplier: { name: string }; news: { title: string } };
 };
 
+const CALL_TONE: Record<string, string> = {
+  completed: "text-positive",
+  failed: "text-negative",
+};
+
 function CallsTab({ tick }: { tick: number }) {
   const [rows, setRows] = useState<CallRow[] | null>(null);
+  const [failed, setFailed] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/calls", { cache: "no-store" })
       .then((r) => r.json())
-      .then(setRows)
-      .catch(() => setRows([]));
+      .then((d: CallRow[]) => {
+        setRows(d);
+        setFailed(false);
+      })
+      .catch(() => setFailed(true));
   }, [tick]);
 
-  if (rows === null) return <PanelEmpty icon={Loader2} label="loading voice ops" spin />;
-  if (rows.length === 0) return <PanelEmpty icon={PhoneCall} label="no voice ops yet." />;
+  if (failed && !rows) return <PanelNote>Could not load calls. They reload with the next event.</PanelNote>;
+  if (rows === null) return <RowsLoading />;
+  if (rows.length === 0)
+    return (
+      <PanelNote>
+        No calls yet. Use Call on a risk to brief the person at the top of its call tree.
+      </PanelNote>
+    );
 
   return (
-    <div className="h-full space-y-1.5 overflow-y-auto p-3">
+    <ul className="h-full divide-y divide-rule overflow-y-auto">
       {rows.map((c) => {
         const open = openId === c.id;
-        const tone =
-          c.status === "completed"
-            ? "text-risk-low"
-            : c.status === "failed"
-              ? "text-risk-critical"
-              : "text-accent-cyan";
         return (
-          <div
-            key={c.id}
-            className="overflow-hidden rounded-lg border border-line/70 bg-bg-card/50"
-          >
+          <li key={c.id}>
             <button
+              type="button"
               onClick={() => setOpenId(open ? null : c.id)}
-              className="flex w-full items-start gap-2 p-3 text-left"
+              aria-expanded={open}
+              className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-raised/60"
             >
-              <PhoneOutgoing className={`mt-0.5 h-3.5 w-3.5 ${tone}`} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-xs text-ink">
-                  <span className="truncate">{c.contact.name}</span>
-                  <span className="text-ink-dim">·</span>
-                  <span className="truncate text-ink-muted">{c.alert.supplier.name}</span>
+                <div className="truncate text-sm text-ink">
+                  {c.contact.name}
+                  <span className="text-ink-muted">, {c.alert.supplier.name}</span>
                 </div>
-                <div className="mt-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-chart text-ink-dim">
-                  <span className={tone}>{c.status}</span>
-                  {c.outcome && (
-                    <span className="border-l border-amber/40 bg-bg-raised/50 px-1.5 text-amber">
-                      → {c.outcome}
-                    </span>
+                <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
+                  <span className={CALL_TONE[c.status] ?? "text-accent"}>{capital(c.status)}</span>
+                  {c.outcome && <span className="text-ink">Decided: {c.outcome}</span>}
+                  {typeof c.durationSec === "number" && (
+                    <span className="tabular-nums text-ink-muted">{duration(c.durationSec)}</span>
                   )}
-                  {typeof c.durationSec === "number" && <span>{c.durationSec}s</span>}
-                  <span className="ml-auto">{shortRelTime(c.createdAt)}</span>
                 </div>
               </div>
+              <span className="shrink-0 text-xs text-ink-muted">{shortRelTime(c.createdAt)}</span>
             </button>
             {open && (
-              <div className="border-t border-line/60 p-3">
-                <span className="label">briefing</span>
-                <p className="mt-1.5 font-display text-[13px] leading-snug text-ink">
-                  {c.alert.news.title}
+              <div className="bg-raised/50 px-4 py-3">
+                <h4 className="text-xs text-ink-muted">Briefing</h4>
+                <p className="mt-0.5 text-sm text-ink">{c.alert.news.title}</p>
+                <h4 className="mt-3 text-xs text-ink-muted">Transcript</h4>
+                <p className="mt-0.5 max-h-48 overflow-auto whitespace-pre-wrap text-sm text-ink-soft">
+                  {c.transcript ?? "No transcript was recorded for this call."}
                 </p>
-                <span className="label mt-3 block">transcript</span>
-                <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-ink-muted">
-                  {c.transcript ?? "— no transcript —"}
-                </pre>
               </div>
             )}
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 
@@ -327,6 +311,7 @@ type SupplierLite = { id: string; name: string; country: string };
 function ContactsTab({ tick }: { tick: number }) {
   const [contacts, setContacts] = useState<ContactRow[] | null>(null);
   const [suppliers, setSuppliers] = useState<SupplierLite[]>([]);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -335,11 +320,10 @@ function ContactsTab({ tick }: { tick: number }) {
     ])
       .then(([cs, ss]: [ContactRow[], SupplierLite[]]) => {
         setContacts(cs);
-        setSuppliers(
-          ss.map((s) => ({ id: s.id, name: s.name, country: s.country })),
-        );
+        setSuppliers(ss.map((s) => ({ id: s.id, name: s.name, country: s.country })));
+        setFailed(false);
       })
-      .catch(() => setContacts([]));
+      .catch(() => setFailed(true));
   }, [tick]);
 
   const sorted = useMemo(
@@ -347,93 +331,83 @@ function ContactsTab({ tick }: { tick: number }) {
     [contacts],
   );
 
-  if (sorted === null) return <PanelEmpty icon={Loader2} label="loading contacts" spin />;
+  if (failed && !sorted)
+    return <PanelNote>Could not load the call tree. It reloads with the next event.</PanelNote>;
+  if (sorted === null) return <RowsLoading />;
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-line/70 px-3 py-2.5">
-        <span className="font-mono text-[10px] uppercase tracking-chart text-ink-muted">
-          {String(sorted.length).padStart(2, "0")} on the tree
+      <div className="flex shrink-0 items-center justify-between border-b border-rule px-4 py-2.5">
+        <span className="text-xs text-ink-muted">
+          {sorted.length} {sorted.length === 1 ? "person" : "people"}, called in escalation order
         </span>
         <ContactForm suppliers={suppliers} />
       </div>
-      <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
-        {sorted.length === 0 && (
-          <div className="rounded-lg border border-line/70 bg-bg-card/50 p-4">
-            <span className="label">tree empty</span>
-            <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">
-              No contacts yet. Add one to put a human on the receiving end.
-            </p>
-          </div>
-        )}
-        {sorted.map((c, idx) => (
-          <div
-            key={c.id}
-            className="flex items-start gap-3 rounded-lg border border-line/70 bg-bg-card/50 p-3"
-          >
-            <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-full border border-line bg-bg-raised text-ink-warm">
-              <span className="font-display text-[11px] leading-none">
-                {c.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+      {sorted.length === 0 ? (
+        <PanelNote>No one is on the call tree. Add a person so Eureka has someone to brief.</PanelNote>
+      ) : (
+        <ul className="flex-1 divide-y divide-rule overflow-y-auto">
+          {sorted.map((c) => (
+            <li key={c.id} className="flex items-start gap-3 px-4 py-3">
+              <span
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-raised text-xs font-semibold text-ink"
+                aria-hidden
+              >
+                {c.name
+                  .split(" ")
+                  .map((p) => p[0])
+                  .slice(0, 2)
+                  .join("")}
               </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2">
-                <span className="truncate font-display text-[14px] text-ink">{c.name}</span>
-                <span className="font-mono text-[9px] uppercase tracking-chart text-amber">
-                  L{c.escalation}
-                </span>
-                <span className="ml-auto font-mono text-[9px] uppercase tracking-chart text-ink-dim">
-                  #{String(idx + 1).padStart(2, "0")}
-                </span>
-              </div>
-              <div className="text-[10px] text-ink-muted">{c.role}</div>
-              <div className="mt-1 flex items-center gap-2 font-mono text-[10px] text-ink-muted">
-                <span>{c.phone}</span>
-                {c.email && (
-                  <>
-                    <span className="text-ink-dim">·</span>
-                    <Mail className="h-2.5 w-2.5" />
-                    <span className="truncate">{c.email}</span>
-                  </>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="truncate text-sm font-medium text-ink">{c.name}</span>
+                  <span className="shrink-0 text-xs text-ink-muted">Level {c.escalation}</span>
+                  {!c.receiveCalls && <span className="shrink-0 text-xs text-warning">Not dialled</span>}
+                </div>
+                <div className="text-xs text-ink-soft">{c.role}</div>
+                <div className="mt-1 truncate text-xs tabular-nums text-ink-muted">
+                  {c.phone}
+                  {c.email && <>, {c.email}</>}
+                </div>
+                {c.suppliers.length > 0 && (
+                  <div className="mt-1 truncate text-xs text-ink-soft">
+                    {c.suppliers.map((cs) => cs.supplier.name).join(", ")}
+                  </div>
                 )}
               </div>
-              {c.suppliers.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {c.suppliers.map((cs) => (
-                    <span
-                      key={cs.supplier.id}
-                      className="border-l border-amber/40 bg-bg-raised/50 px-1.5 py-0 font-mono text-[9px] uppercase tracking-chart text-ink-muted"
-                    >
-                      {cs.supplier.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <DeleteContactButton id={c.id} name={c.name} />
-          </div>
-        ))}
-      </div>
+              <DeleteContactButton id={c.id} name={c.name} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-// ── Empty state helper ──────────────────────────────────────────
-function PanelEmpty({
-  icon: Icon,
-  label,
-  spin,
-}: {
-  icon: LucideIcon;
-  label: string;
-  spin?: boolean;
-}) {
+function PanelNote({ children }: { children: React.ReactNode }) {
+  return <p className="px-4 py-4 text-sm text-ink-soft">{children}</p>;
+}
+
+function RowsLoading() {
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="flex flex-col items-center gap-2.5 text-ink-dim">
-        <Icon className={cn("h-4 w-4", spin && "animate-spin")} />
-        <span className="font-mono text-[10px] uppercase tracking-chart">{label}</span>
-      </div>
+    <div className="divide-y divide-rule" aria-label="Loading">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="space-y-2 px-4 py-4">
+          <div className="h-3 w-24 rounded bg-raised" />
+          <div className="h-4 w-full rounded bg-raised" />
+        </div>
+      ))}
     </div>
   );
+}
+
+function capital(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function duration(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m > 0 ? `${m} m ${s} s` : `${s} s`;
 }

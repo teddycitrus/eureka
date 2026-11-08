@@ -39,7 +39,7 @@ export function TestFireButton({
       return;
     }
     setState("ok");
-    setMsg(`${data.severity} · ${data.supplier}`);
+    setMsg(`${data.severity}, ${data.supplier}`);
     startTransition(() => router.refresh());
     if (redirect && data.alertId) {
       setTimeout(() => router.push(`/?alert=${data.alertId}#${data.alertId}`), 600);
@@ -47,55 +47,37 @@ export function TestFireButton({
     setTimeout(() => setState("idle"), 3000);
   }
 
-  const base =
-    "group inline-flex items-center gap-2 px-3 py-1.5 font-mono text-[10px] uppercase tracking-chart transition-colors";
-  const styles = {
-    primary:
-      "border border-amber/60 bg-amber/15 text-amber hover:bg-amber/25 hover:border-amber",
-    ghost:
-      "border border-line bg-bg-raised/50 text-ink-muted hover:border-amber/50 hover:text-amber",
-  } as const;
-
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={fire}
-        disabled={pending || state !== "idle"}
-        className={cn(
-          base,
-          state === "ok" && "border-risk-low/50 bg-risk-low/15 text-risk-low",
-          state === "err" && "border-risk-critical/50 bg-risk-critical/15 text-risk-critical",
-          state === "idle" && styles[variant],
-        )}
-        title="Fire a synthetic high-severity alert"
-      >
-        {state === "ok" ? (
-          <Check className="h-3 w-3" />
-        ) : state === "err" ? (
-          <X className="h-3 w-3" />
-        ) : pending ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : (
-          <Zap className="h-3 w-3" />
-        )}
-        {state === "ok"
-          ? "alert fired"
-          : state === "err"
-            ? "fire failed"
-            : pending
-              ? "firing"
-              : "simulate"}
-      </button>
+    <div className="flex items-center gap-3">
       {msg && state !== "idle" && (
-        <span
-          className={cn(
-            "max-w-xs truncate font-mono text-[10px] uppercase tracking-chart",
-            state === "ok" ? "text-ink-muted" : "text-risk-critical",
-          )}
-        >
+        <span className={cn("max-w-xs truncate text-xs", state === "ok" ? "text-ink-soft" : "text-negative")}>
           {msg}
         </span>
       )}
+      <button
+        type="button"
+        onClick={fire}
+        disabled={pending || state !== "idle"}
+        className={cn("btn h-7 px-3 text-xs", variant === "primary" ? "btn-primary" : "btn-secondary")}
+        title="Fire a synthetic high-severity alert"
+      >
+        {state === "ok" ? (
+          <Check className="h-3.5 w-3.5" aria-hidden />
+        ) : state === "err" ? (
+          <X className="h-3.5 w-3.5" aria-hidden />
+        ) : pending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+        ) : (
+          <Zap className="h-3.5 w-3.5" aria-hidden />
+        )}
+        {state === "ok"
+          ? "Alert fired"
+          : state === "err"
+            ? "Could not fire"
+            : pending
+              ? "Firing"
+              : "Simulate an alert"}
+      </button>
     </div>
   );
 }

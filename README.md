@@ -39,6 +39,7 @@
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
+    <li><a href="#architecture">Architecture</a></li>
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
@@ -85,6 +86,93 @@ Key capabilities:
 * [![Three.js][Three-badge]][Three-url]
 * [![Twilio][Twilio-badge]][Twilio-url]
 * [![Zod][Zod-badge]][Zod-url]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ARCHITECTURE -->
+## Architecture
+
+Eureka is one Next.js app. The browser shows a single working screen, the globe with four windows over it, and keeps it current through a server-sent event stream. API routes read and write a Prisma database, score news against the supplier list, and hand briefings to Vapi, whose webhook reports decisions back.
+
+```mermaid
+flowchart LR
+  subgraph Browser
+    UI["Global lanes screen<br/><sub>globe + Disruptions, Operations, Network, Hear a briefing</sub>"]
+  end
+  subgraph App["Next.js app"]
+    API["API routes<br/><sub>globe, alerts, calls, contacts, shipments</sub>"]
+    Ingest["/api/news/ingest<br/><sub>scores headlines against suppliers</sub>"]
+    Dispatch["dispatch<br/><sub>calls every callable contact</sub>"]
+    Hook["/api/calls/vapi-webhook<br/><sub>decisions, reroutes, recap</sub>"]
+    Bus["Event bus<br/><sub>in-memory pub/sub</sub>"]
+    SSE["/api/stream<br/><sub>server-sent events</sub>"]
+  end
+  DB[("SQLite or Turso<br/><sub>via Prisma</sub>")]
+  News([NewsAPI])
+  Vapi([Vapi voice agent])
+  Twilio([Twilio SMS])
+  Turnstile([Cloudflare Turnstile])
+  Phone([On-call manager])
+
+  UI -- "snapshot, actions" --> API
+  UI -. "demo call-me" .-> Turnstile
+  API --> DB
+  News -. "headlines, stub list without a key" .-> Ingest
+  Ingest -- "alerts" --> DB
+  Ingest --> Dispatch
+  API -- "Call on a risk" --> Vapi
+  Dispatch --> Vapi
+  Vapi -- "rings" --> Phone
+  Vapi -- "function calls, end of call" --> Hook
+  Hook -- "decision, reroute" --> DB
+  Hook -- "recap" --> Twilio
+  Twilio --> Phone
+  Ingest --> Bus
+  Hook --> Bus
+  API --> Bus
+  Bus --> SSE
+  SSE -- "alert, shipment, call events" --> UI
+```
+
+```mermaid
+sequenceDiagram
+  participant N as NewsAPI
+  participant I as /api/news/ingest
+  participant D as Database
+  participant V as Vapi
+  participant M as On-call manager
+  participant W as vapi-webhook
+  participant T as Twilio
+  participant S as /api/stream
+  participant U as Global lanes screen
+
+  I->>N: fetch recent supply-chain headlines
+  I->>D: store news, create alert when score is 0.4 or more
+  I->>S: alert.created
+  S-->>U: Disruptions and Risks update, globe tags the supplier
+  I->>V: dispatch briefing to each callable contact
+  V->>M: phone call with briefing and linked shipments
+  M->>V: decides, for example reroute PO-9821-TW
+  V->>W: reroute_shipment, then record_decision
+  W->>D: shipment rerouted, alert status from the decision
+  W->>S: shipment.updated, call.outcome
+  S-->>U: lane turns blue on the globe, Log records the decision
+  V->>W: end-of-call report
+  W->>T: SMS recap to the manager
+  Note over U,M: The decision is on the screen and on the manager's phone
+```
+
+The pipeline always runs in this order:
+
+1. A headline is scored against the supplier list; only a score of 0.4 or more on a mapped supplier becomes an alert, and its severity comes from the score.
+2. Low-severity alerts are never dialled. Every other alert calls, at once, each contact on the supplier's call tree who allows calls, and a failed dial is still logged as a call.
+3. Every change (alert, shipment, call) is emitted on the event bus, and the screen refetches its snapshot when one arrives.
+
+Limits that matter:
+
+- The event bus lives in one Node process, so live updates reach only clients connected to the same instance.
+- Every API route is rate limited (for example the globe snapshot at 120 a minute). Placing a call from a risk is limited to 10 a minute and is admin-only in demo mode.
+- The public demo call is gated by Turnstile and limited to one per IP an hour and one per number a day, with a global daily cap.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -152,7 +240,7 @@ npm install npm@latest -g
 
 **Globe view**
 
-The home screen renders a live 3D globe. Supplier nodes are plotted by geography; colour intensity reflects aggregated risk score. Click any node to open a detail panel with event history and current exposure metrics.
+The home screen renders a live 3D globe of the Earth at night, in greyscale, so the only colour on it is data: suppliers are coloured by risk, lanes by status, and a lane Eureka rerouted turns blue. Suppliers with an open alert carry a name tag. Click a tag, a supplier or a disruption to fly the globe to it and select the matching risk in the Operations window, where the on-call manager is one click away. Four windows (Disruptions, Operations, Network, Hear a briefing) can be dragged, resized, minimized and maximized; on narrow screens they stack under the globe. Add `?sample` to the URL to skip the FourKites connect dialog.
 
 **Voice query**
 

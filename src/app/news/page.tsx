@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { Topbar } from "@/components/topbar";
 import { parseList, severityFromScore, shortRelTime } from "@/lib/utils";
 import { RiskBadge } from "@/components/risk-badge";
-import { ExternalLink, Globe2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,67 +15,54 @@ export default async function NewsPage() {
 
   return (
     <div className="flex flex-col">
-      <Topbar
-        title="Signals"
-        subtitle="Raw news stream, scored for supply-chain relevance against your suppliers."
-      />
-      <div className="space-y-3 p-8">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-ink-muted">{items.length} items</p>
+      <Topbar title="Signals" subtitle="The news stream, scored for relevance against your suppliers." />
+      <div className="mx-auto w-full max-w-[1120px] px-4 pb-16">
+        <div className="flex items-center justify-between border-b border-rule pb-3">
+          <span className="text-xs text-ink-muted">{items.length} items</span>
           <form action="/api/news/ingest" method="post">
-            <button
-              type="submit"
-              className="rounded-lg border border-line bg-bg-raised/60 px-3 py-1.5 text-xs text-ink-muted hover:border-eureka-500/40 hover:text-ink"
-            >
-              ingest now
+            <button type="submit" className="btn btn-secondary h-7 px-3 text-xs">
+              Ingest now
             </button>
           </form>
         </div>
-
-        {items.map((n) => {
-          const sev = severityFromScore(n.riskScore);
-          return (
-            <div key={n.id} className="glass rounded-2xl p-5">
-              <div className="flex flex-wrap items-center gap-3">
-                <RiskBadge severity={sev} />
-                <span className="text-[11px] text-ink-dim">score {n.riskScore.toFixed(2)}</span>
-                <span className="text-[11px] text-ink-dim">· {n.source}</span>
-                <span className="text-[11px] text-ink-dim">· {shortRelTime(n.publishedAt)}</span>
-                {n.region && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-ink-muted">
-                    <Globe2 className="h-3 w-3" /> {n.region}
-                  </span>
-                )}
-                <a
-                  href={n.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ml-auto inline-flex items-center gap-1 text-xs text-ink-muted hover:text-eureka-200"
-                >
-                  open <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-              <h3 className="mt-2 font-display text-base text-ink">{n.title}</h3>
-              <p className="mt-1.5 line-clamp-2 text-sm text-ink-muted">{n.summary}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                {parseList<string>(n.topics).map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-md border border-line bg-bg-raised/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-ink-muted"
+        <ul className="divide-y divide-rule">
+          {items.map((n) => {
+            const topics = parseList<string>(n.topics);
+            return (
+              <li key={n.id} className="py-5">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-ink-muted">
+                  <RiskBadge severity={severityFromScore(n.riskScore)} />
+                  <span className="tabular-nums">Score {n.riskScore.toFixed(2)}</span>
+                  <span>{n.source}</span>
+                  <span>{shortRelTime(n.publishedAt)}</span>
+                  {n.region && <span>{n.region}</span>}
+                  <a
+                    href={n.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-auto inline-flex items-center gap-1 hover:text-ink"
                   >
-                    {t}
-                  </span>
-                ))}
-                {n.alerts.length > 0 && (
-                  <span className="ml-auto text-[11px] text-eureka-300">
-                    {n.alerts.length} alert{n.alerts.length === 1 ? "" : "s"} ·{" "}
-                    {n.alerts.map((a) => a.supplier.name).join(", ")}
-                  </span>
+                    Open <ExternalLink className="h-3 w-3" aria-hidden />
+                  </a>
+                </div>
+                <h2 className="mt-1.5 text-base font-medium text-ink">{n.title}</h2>
+                <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{n.summary}</p>
+                {(topics.length > 0 || n.alerts.length > 0) && (
+                  <p className="mt-2 text-xs text-ink-muted">
+                    {topics.join(", ")}
+                    {n.alerts.length > 0 && (
+                      <span className="text-ink-soft">
+                        {topics.length > 0 && ". "}
+                        Raised {n.alerts.length} alert{n.alerts.length === 1 ? "" : "s"} for{" "}
+                        {n.alerts.map((a) => a.supplier.name).join(", ")}
+                      </span>
+                    )}
+                  </p>
                 )}
-              </div>
-            </div>
-          );
-        })}
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );

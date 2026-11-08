@@ -28,11 +28,11 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
   const openedRef = useRef(false);
   useEffect(() => {
     if (open && !openedRef.current) {
-      const W = 600;
-      const H = 580;
+      const W = 560;
+      const H = 560;
       setInitialPos({
-        x: Math.max(20, Math.floor(window.innerWidth / 2 - W / 2)),
-        y: Math.max(20, Math.floor(window.innerHeight / 2 - H / 2)),
+        x: Math.max(16, Math.floor(window.innerWidth / 2 - W / 2)),
+        y: Math.max(16, Math.floor(window.innerHeight / 2 - H / 2)),
       });
       openedRef.current = true;
     }
@@ -57,7 +57,7 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
     setError(null);
 
     if (!/^\+\d{6,15}$/.test(phone)) {
-      setError("phone must be E.164 (e.g. +14155551234)");
+      setError("Enter the phone number with its country code, for example +14155551234.");
       return;
     }
 
@@ -79,7 +79,7 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
 
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: unknown };
-      setError(typeof data.error === "string" ? data.error : "create failed");
+      setError(typeof data.error === "string" ? data.error : "The person could not be added.");
       return;
     }
 
@@ -105,41 +105,34 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 border border-amber/60 bg-amber/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-chart text-amber transition-colors hover:bg-amber/25 hover:border-amber"
-      >
-        <UserPlus className="h-3 w-3" />
-        new contact
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-secondary h-7 px-3 text-xs">
+        <UserPlus className="h-3.5 w-3.5" aria-hidden />
+        Add person
       </button>
 
       {open && initialPos && (
-        <div className="pointer-events-none fixed inset-0 z-50">
+        <div className="pointer-events-none fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Add to the call tree">
+          <div className="pointer-events-auto absolute inset-0 bg-black/60" onClick={close} />
           <Window
-            title="new contact"
+            title="Add to the call tree"
             defaultPos={initialPos}
-            defaultSize={{ width: 600, height: 580 }}
-            minSize={{ width: 380, height: 240 }}
+            defaultSize={{
+              width: Math.min(560, window.innerWidth - 32),
+              height: Math.min(560, window.innerHeight - 32),
+            }}
+            minSize={{ width: Math.min(360, window.innerWidth - 32), height: 240 }}
             zIndex={60}
             bounds="parent"
             onClose={close}
-            className="pointer-events-auto shadow-instrument"
+            dialog
+            className="pointer-events-auto"
           >
-            <form
-              onSubmit={submit}
-              className="flex h-full flex-col overflow-y-auto px-6 pb-5 pt-4"
-            >
-              <div>
-                <span className="label">station · contact registry</span>
-                <h3 className="mt-1 font-display text-lg italic text-ink-warm">
-                  add a human to the call tree
-                </h3>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
-                  Eureka will dial them when an alert ≥ medium hits a mapped supplier.
-                </p>
-              </div>
+            <form onSubmit={submit} className="flex h-full flex-col overflow-y-auto px-5 py-4">
+              <p className="text-sm text-ink-soft">
+                Eureka calls this person when a medium or worse alert reaches one of their suppliers.
+              </p>
 
-              <div className="mt-5 grid grid-cols-2 gap-4">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field label="Name" required>
                   <input
                     required
@@ -158,16 +151,16 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
                     className={inputClass}
                   />
                 </Field>
-                <Field label="Phone (E.164)" required hint="incl. country code">
+                <Field label="Phone" required hint="With country code">
                   <input
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+14155551234"
-                    className={cn(inputClass, "font-mono")}
+                    className={cn(inputClass, "tabular-nums")}
                   />
                 </Field>
-                <Field label="Email" hint="optional">
+                <Field label="Email" hint="Optional">
                   <input
                     type="email"
                     value={email}
@@ -176,7 +169,7 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
                     className={inputClass}
                   />
                 </Field>
-                <Field label="Escalation tier" hint="1 = first responder">
+                <Field label="Escalation level" hint="1 is called first">
                   <select
                     value={escalation}
                     onChange={(e) => setEscalation(Number(e.target.value))}
@@ -184,87 +177,67 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
                   >
                     {[1, 2, 3, 4, 5].map((n) => (
                       <option key={n} value={n}>
-                        L{n}
+                        Level {n}
                       </option>
                     ))}
                   </select>
                 </Field>
-                <Field label="Voice ops">
-                  <label className="flex h-9 items-center gap-2 border border-line bg-bg-raised/60 px-3 text-sm text-ink">
-                    <input
-                      type="checkbox"
-                      checked={receiveCalls}
-                      onChange={(e) => setReceiveCalls(e.target.checked)}
-                      className="h-3.5 w-3.5 accent-amber"
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-chart">
-                      dialable by eureka
-                    </span>
-                  </label>
-                </Field>
+                <label className="flex items-center gap-2 self-end pb-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={receiveCalls}
+                    onChange={(e) => setReceiveCalls(e.target.checked)}
+                    className="h-4 w-4 accent-[rgb(var(--accent))]"
+                  />
+                  Eureka may call this person
+                </label>
               </div>
 
-              <div className="mt-5">
-                <span className="label">assign suppliers</span>
+              <fieldset className="mt-5">
+                <legend className="text-xs font-medium text-ink">Suppliers they answer for</legend>
                 {suppliers.length === 0 ? (
-                  <p className="mt-2 text-xs text-ink-muted">
-                    No suppliers yet — add some via the API first.
+                  <p className="mt-2 text-sm text-ink-soft">
+                    No suppliers yet. Add some through the API first.
                   </p>
                 ) : (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {suppliers.map((s) => {
                       const on = supplierIds.includes(s.id);
                       return (
                         <button
                           key={s.id}
                           type="button"
+                          aria-pressed={on}
                           onClick={() => toggleSupplier(s.id)}
                           className={cn(
-                            "border-l px-2 py-1 font-mono text-[10px] uppercase tracking-chart transition-colors",
+                            "btn h-7 px-3 text-xs",
                             on
-                              ? "border-amber bg-amber/15 text-amber"
-                              : "border-line bg-bg-raised/40 text-ink-muted hover:border-amber/40 hover:text-ink",
+                              ? "bg-ink text-surface"
+                              : "border border-control text-ink-soft hover:border-ink-muted hover:text-ink",
                           )}
                         >
                           {s.name}
-                          <span className="ml-1.5 text-ink-dim">{s.country}</span>
+                          <span className={on ? "text-surface/70" : "text-ink-muted"}>{s.country}</span>
                         </button>
                       );
                     })}
                   </div>
                 )}
-              </div>
+              </fieldset>
 
-              {error && (
-                <p className="mt-4 border-l-2 border-risk-critical bg-risk-critical/10 px-3 py-2 font-mono text-[10px] uppercase tracking-chart text-risk-critical">
-                  {error}
-                </p>
-              )}
+              {error && <p className="mt-4 text-sm text-negative">{error}</p>}
 
               <div className="mt-auto flex items-center justify-end gap-2 pt-5">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="border border-line bg-bg-raised/40 px-3 py-1.5 font-mono text-[10px] uppercase tracking-chart text-ink-muted hover:text-ink"
-                >
-                  cancel
+                <button type="button" onClick={close} className="btn btn-text">
+                  Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={pending || done}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-chart transition-colors",
-                    done
-                      ? "border border-risk-low/60 bg-risk-low/15 text-risk-low"
-                      : "border border-amber/60 bg-amber/15 text-amber hover:bg-amber/25 hover:border-amber disabled:opacity-50",
-                  )}
-                >
+                <button type="submit" disabled={pending || done} className="btn btn-primary">
                   {done ? (
-                    <Check className="h-3 w-3" />
+                    <Check className="h-3.5 w-3.5" aria-hidden />
                   ) : pending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
                   ) : null}
-                  {done ? "saved" : pending ? "saving" : "create contact"}
+                  {done ? "Added" : pending ? "Adding" : "Add to call tree"}
                 </button>
               </div>
             </form>
@@ -275,8 +248,7 @@ export function ContactForm({ suppliers }: { suppliers: Supplier[] }) {
   );
 }
 
-const inputClass =
-  "h-9 w-full border border-line bg-bg-raised/60 px-3 text-[12px] text-ink placeholder:text-ink-dim focus:border-amber/60 focus:outline-none focus:ring-1 focus:ring-amber/40";
+const inputClass = "field";
 
 function Field({
   label,
@@ -291,14 +263,10 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="label">
-        {label}
-        {required && <span className="ml-1 text-amber normal-case">*</span>}
-        {hint && (
-          <span className="ml-2 normal-case tracking-normal text-ink-dim/80">
-            · {hint}
-          </span>
-        )}
+      <span className="text-xs">
+        <span className="font-medium text-ink">{label}</span>
+        {required && <span className="sr-only"> (required)</span>}
+        {hint && <span className="ml-2 text-ink-muted">{hint}</span>}
       </span>
       {children}
     </label>

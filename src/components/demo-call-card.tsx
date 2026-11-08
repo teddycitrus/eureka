@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Script from "next/script";
-import { Loader2, Phone, Check, X } from "lucide-react";
+import { Loader2, Phone, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type State = "idle" | "pending" | "ok" | "err";
@@ -38,6 +38,7 @@ export function DemoCallCard() {
   const [name, setName] = useState("");
   const [state, setState] = useState<State>("idle");
   const [msg, setMsg] = useState<string | null>(null);
+  const id = useId();
 
   // Turnstile state — only relevant when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set.
   const turnstileRef = useRef<HTMLDivElement | null>(null);
@@ -58,7 +59,7 @@ export function DemoCallCard() {
       if (turnstileWidgetId.current) return; // already rendered
       turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
-        size: "compact",
+        size: "flexible",
         theme: "dark",
         callback: (token) => setCaptchaToken(token),
         "expired-callback": () => setCaptchaToken(""),
@@ -97,8 +98,8 @@ export function DemoCallCard() {
         setMsg(
           data.error ??
             (res.status === 429
-              ? "rate limited — try again later"
-              : `failed (${res.status})`),
+              ? "Too many calls from here. Try again later."
+              : `The call could not be placed (${res.status}).`),
         );
         // Force a fresh CAPTCHA token after any rejection.
         if (captchaRequired && window.turnstile && turnstileWidgetId.current) {
@@ -109,7 +110,7 @@ export function DemoCallCard() {
         return;
       }
       setState("ok");
-      setMsg(data.message ?? "ringing now");
+      setMsg(data.message ?? "Your phone is ringing.");
       setPhone("");
       setName("");
       if (captchaRequired && window.turnstile && turnstileWidgetId.current) {
@@ -119,50 +120,50 @@ export function DemoCallCard() {
       setTimeout(() => setState("idle"), 8000);
     } catch {
       setState("err");
-      setMsg("network error");
+      setMsg("No connection. Check your network and try again.");
       setTimeout(() => setState("idle"), 4000);
     }
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="pointer-events-auto flex w-[280px] flex-col gap-2 border border-line/80 bg-bg-raised/85 p-3 backdrop-blur"
-    >
-      <div className="flex items-center justify-between">
-        <span className="label">demo · call me</span>
-        <span className="font-mono text-[9px] uppercase tracking-chart text-ink-dim">
-          1 call · &lt;90s
-        </span>
-      </div>
-      <p className="font-mono text-[10px] leading-relaxed text-ink-muted">
-        eureka will phone your number with a 30-second briefing, then text a
-        short summary. one call per number per day. us · uk · au only.
+    <form onSubmit={submit} className="flex h-full flex-col gap-3 overflow-y-auto px-4 py-3">
+      <p className="text-sm text-ink-soft">
+        Eureka phones you with a 30-second briefing on this network, then texts a summary. One call
+        per number a day, US, UK and AU numbers.
       </p>
-      <input
-        type="text"
-        inputMode="text"
-        autoComplete="name"
-        placeholder="your name (optional)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        disabled={state === "pending"}
-        maxLength={40}
-        className="border border-line bg-bg/60 px-2 py-1 font-mono text-[11px] text-ink placeholder:text-ink-dim focus:border-amber/60 focus:outline-none"
-      />
-      <input
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        placeholder="+14155551212"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        disabled={state === "pending"}
-        required
-        pattern="^\+\d{8,15}$"
-        maxLength={16}
-        className="border border-line bg-bg/60 px-2 py-1 font-mono text-[11px] text-ink placeholder:text-ink-dim focus:border-amber/60 focus:outline-none"
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1.5" htmlFor={`${id}-name`}>
+          <span className="text-xs text-ink-muted">Name, optional</span>
+          <input
+            id={`${id}-name`}
+            type="text"
+            autoComplete="name"
+            placeholder="Alex"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={state === "pending"}
+            maxLength={40}
+            className="field"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5" htmlFor={`${id}-phone`}>
+          <span className="text-xs text-ink-muted">Phone, with country code</span>
+          <input
+            id={`${id}-phone`}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+14155551212"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            disabled={state === "pending"}
+            required
+            pattern="^\+\d{8,15}$"
+            maxLength={16}
+            className="field tabular-nums"
+          />
+        </label>
+      </div>
       {captchaRequired && (
         <>
           <Script
@@ -171,50 +172,33 @@ export function DemoCallCard() {
             async
             defer
           />
-          <div
-            ref={turnstileRef}
-            className={cn("flex justify-center", captchaToken && "hidden")}
-          />
+          <div ref={turnstileRef} className={cn(captchaToken && "hidden")} />
         </>
       )}
-      <button
-        type="submit"
-        disabled={state === "pending" || !phone || (captchaRequired && !captchaToken)}
-        className={cn(
-          "inline-flex items-center justify-center gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-chart transition-colors",
-          state === "ok" && "border-risk-low/50 bg-risk-low/15 text-risk-low",
-          state === "err" && "border-risk-critical/50 bg-risk-critical/15 text-risk-critical",
-          state !== "ok" && state !== "err" &&
-            "border-amber/60 bg-amber/15 text-amber hover:bg-amber/25 disabled:opacity-50",
-        )}
-      >
-        {state === "pending" ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : state === "ok" ? (
-          <Check className="h-3 w-3" />
-        ) : state === "err" ? (
-          <X className="h-3 w-3" />
-        ) : (
-          <Phone className="h-3 w-3" />
-        )}
-        {state === "pending"
-          ? "calling"
-          : state === "ok"
-            ? "ringing"
-            : state === "err"
-              ? "blocked"
-              : "ring my phone"}
-      </button>
-      {msg && (
-        <span
-          className={cn(
-            "font-mono text-[10px] uppercase tracking-chart",
-            state === "err" ? "text-risk-critical" : "text-ink-muted",
-          )}
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={state === "pending" || !phone || (captchaRequired && !captchaToken)}
+          className="btn btn-primary"
         >
-          {msg}
-        </span>
-      )}
+          {state === "pending" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          ) : state === "ok" ? (
+            <Check className="h-3.5 w-3.5" aria-hidden />
+          ) : (
+            <Phone className="h-3.5 w-3.5" aria-hidden />
+          )}
+          {state === "pending" ? "Calling" : state === "ok" ? "Ringing" : "Call my phone"}
+        </button>
+        {msg && (
+          <span
+            role="status"
+            className={cn("text-xs", state === "err" ? "text-negative" : "text-ink-soft")}
+          >
+            {msg}
+          </span>
+        )}
+      </div>
     </form>
   );
 }

@@ -1,49 +1,31 @@
 "use client";
 
-import {
-  Activity,
-  Siren,
-  GitBranch,
-  Bell,
-  Gavel,
-  ShieldAlert,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { shortRelTime } from "@/lib/utils";
+import { cn, shortRelTime } from "@/lib/utils";
 import type { ActivityEntry } from "./lanes-view";
 
 // Only meaningful actions land here — outbound dial events are excluded.
-const KIND_META: Record<
-  string,
-  { icon: LucideIcon; label: (p: Record<string, unknown>) => string; tone: string }
-> = {
+// The mark says who acted: a risk hue for the world, blue for Eureka.
+const KIND_META: Record<string, { label: (p: Record<string, unknown>) => string; mark: string }> = {
   "alert.created": {
-    icon: Bell,
-    label: (p) => `risk surfaced · ${String(p.severity ?? "")}`,
-    tone: "text-amber",
+    label: (p) => `Risk surfaced${p.severity ? `, ${String(p.severity)}` : ""}`,
+    mark: "bg-risk-high",
   },
   "alert.updated": {
-    icon: Siren,
     label: (p) => statusLabel(p),
-    tone: "text-ink",
+    mark: "bg-ink-muted",
   },
   "call.outcome": {
-    icon: Gavel,
-    label: (p) => `decision recorded · ${String(p.outcome ?? "")}`,
-    tone: "text-accent-cyan",
+    label: (p) => `Decision recorded${p.outcome ? `: ${String(p.outcome)}` : ""}`,
+    mark: "bg-accent",
   },
   "shipment.created": {
-    icon: GitBranch,
-    label: () => "lane added",
-    tone: "text-ink-muted",
+    label: () => "Lane added",
+    mark: "bg-ink-muted",
   },
   "shipment.updated": {
-    icon: GitBranch,
     label: (p) =>
-      String(p.status) === "rerouted"
-        ? "lane rerouted"
-        : `lane → ${String(p.status ?? "")}`,
-    tone: "text-amber",
+      String(p.status) === "rerouted" ? "Lane rerouted" : `Lane now ${String(p.status ?? "updated")}`,
+    mark: "bg-accent",
   },
 };
 
@@ -51,99 +33,50 @@ const HIDDEN_KINDS = new Set(["call.started"]);
 
 function statusLabel(p: Record<string, unknown>): string {
   const status = String(p.status ?? "");
-  if (status === "calling") return "voice briefing dispatched";
-  if (status === "escalated") return "alert escalated";
-  if (status === "resolved") return "alert resolved";
-  if (status === "dismissed") return "alert dismissed";
-  return `alert · ${status}`;
+  if (status === "calling") return "Voice briefing dispatched";
+  if (status === "escalated") return "Alert escalated";
+  if (status === "resolved") return "Alert resolved";
+  if (status === "dismissed") return "Alert dismissed";
+  return `Alert ${status}`;
 }
 
-export function ActivityRail({
-  entries,
-  embedded = false,
-}: {
-  entries: ActivityEntry[];
-  embedded?: boolean;
-}) {
+export function ActivityRail({ entries }: { entries: ActivityEntry[] }) {
   const visible = entries.filter((e) => !HIDDEN_KINDS.has(e.kind));
 
-  return (
-    <div className="flex h-full flex-col">
-      {!embedded && (
-        <header className="flex items-baseline justify-between border-b border-line/80 px-5 py-4">
-          <div>
-            <span className="label">activity</span>
-            <div className="mt-1 font-display text-base italic text-ink-warm">
-              the log
-            </div>
-          </div>
-          <span className="font-mono text-[18px] font-medium tabular-nums text-amber">
-            {String(visible.length).padStart(2, "0")}
-          </span>
-        </header>
-      )}
-
-      <div className="flex-1 overflow-y-auto px-2 py-3">
-        {visible.length === 0 ? (
-          <div className="mx-1 rounded-lg border border-line/70 bg-bg-card/50 p-4">
-            <span className="label">status</span>
-            <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">
-              The log is open. Actions taken by the system or its operators
-              will appear here.
-            </p>
-          </div>
-        ) : (
-          <ol className="relative">
-            {/* vertical rule running through the log */}
-            <span
-              aria-hidden
-              className="absolute left-[18px] top-2 bottom-2 w-px bg-line/70"
-            />
-            {visible.map((e, idx) => {
-              const meta =
-                KIND_META[e.kind] ?? {
-                  icon: Activity,
-                  label: () => e.kind,
-                  tone: "text-ink-muted",
-                };
-              const Icon = meta.icon;
-              return (
-                <li
-                  key={`${e.ts}-${idx}`}
-                  className="relative flex items-start gap-3 px-2 py-2 hover:bg-bg-hover/30"
-                >
-                  <span className="relative z-10 mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border border-line bg-bg-card">
-                    <Icon className={`h-2.5 w-2.5 ${meta.tone}`} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className={`text-[12px] leading-tight ${meta.tone}`}>
-                      {meta.label(e.payload)}
-                    </div>
-                    {tail(e.payload) && (
-                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-chart text-ink-dim">
-                        {tail(e.payload)}
-                      </div>
-                    )}
-                  </div>
-                  <span className="font-mono text-[10px] uppercase tracking-chart text-ink-dim">
-                    {shortRelTime(new Date(e.ts))}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        )}
+  if (visible.length === 0) {
+    return (
+      <div className="px-4 py-4">
+        <p className="text-sm text-ink">Nothing has happened since you opened this page.</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          New risks, reroutes, calls and decisions appear here as they happen.
+        </p>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <ol className="h-full divide-y divide-rule overflow-y-auto">
+      {visible.map((e, idx) => {
+        const meta = KIND_META[e.kind] ?? { label: () => e.kind, mark: "bg-ink-muted" };
+        const ref = tail(e.payload);
+        return (
+          <li key={`${e.ts}-${idx}`} className="arrive flex items-start gap-3 px-4 py-2.5">
+            <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", meta.mark)} aria-hidden />
+            <div className="min-w-0 flex-1">
+              <div className="text-sm text-ink">{meta.label(e.payload)}</div>
+              {ref && <div className="text-xs text-ink-muted">{ref}</div>}
+            </div>
+            <span className="shrink-0 text-xs text-ink-muted">{shortRelTime(new Date(e.ts))}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
 function tail(p: Record<string, unknown>): string | null {
-  if (typeof p.alertId === "string") return `ref ${String(p.alertId).slice(0, 6)}`;
-  if (typeof p.shipmentId === "string") return `ref ${String(p.shipmentId).slice(0, 6)}`;
-  if (typeof p.callId === "string") return `ref ${String(p.callId).slice(0, 6)}`;
+  if (typeof p.alertId === "string") return `Alert ${String(p.alertId).slice(-6)}`;
+  if (typeof p.shipmentId === "string") return `Shipment ${String(p.shipmentId).slice(-6)}`;
+  if (typeof p.callId === "string") return `Call ${String(p.callId).slice(-6)}`;
   return null;
 }
-
-// Keep ShieldAlert import to avoid breaking cross-file refs; not used directly here.
-void ShieldAlert;

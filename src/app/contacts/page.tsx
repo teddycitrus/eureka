@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { Topbar } from "@/components/topbar";
-import { Phone, Mail, ShieldCheck, Building2 } from "lucide-react";
 import { ContactForm } from "./contact-form";
 import { DeleteContactButton } from "./delete-button";
 
@@ -20,85 +19,56 @@ export default async function ContactsPage() {
 
   return (
     <div className="flex flex-col">
-      <Topbar
-        title="Contacts"
-        subtitle="People Eureka can dial when a supplier risk lands. Lower escalation = first."
-      />
-      <div className="space-y-3 p-8">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-ink-muted">
-            {contacts.length} contact{contacts.length === 1 ? "" : "s"} on the call-tree
-          </p>
+      <Topbar title="Contacts" subtitle="People Eureka calls when a supplier risk lands, lowest level first." />
+      <div className="mx-auto w-full max-w-[1120px] px-4 pb-16">
+        <div className="flex items-center justify-between border-b border-rule pb-3">
+          <span className="text-xs text-ink-muted">
+            {contacts.length} {contacts.length === 1 ? "person" : "people"} on the call tree
+          </span>
           <ContactForm suppliers={suppliers} />
         </div>
-
         {contacts.length === 0 && (
-          <div className="glass rounded-2xl p-8 text-center text-ink-muted">
-            No contacts yet — click <span className="text-eureka-200">New contact</span> to add one.
-          </div>
+          <p className="py-6 text-sm text-ink-soft">No one is on the call tree yet. Add a person to start.</p>
         )}
-        {contacts.map((c) => (
-          <div
-            key={c.id}
-            className="glass flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl p-5"
-          >
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full border border-eureka-500/30 bg-bg-card text-eureka-200">
-                {c.name
-                  .split(" ")
-                  .map((p) => p[0])
-                  .slice(0, 2)
-                  .join("")}
-              </div>
-              <div>
-                <div className="font-display text-base text-ink">{c.name}</div>
-                <div className="text-xs text-ink-muted">{c.role}</div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1 text-xs text-ink-muted">
-              <span className="inline-flex items-center gap-1.5">
-                <Phone className="h-3 w-3 text-eureka-300" />
-                <span className="font-mono text-ink">{c.phone}</span>
-              </span>
-              {c.email && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Mail className="h-3 w-3" /> {c.email}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs">
-              <ShieldCheck
-                className={`h-3.5 w-3.5 ${c.receiveCalls ? "text-risk-low" : "text-ink-dim"}`}
-              />
-              <span className={c.receiveCalls ? "text-ink" : "text-ink-dim"}>
-                {c.receiveCalls ? "voice ok" : "no voice"}
-              </span>
-              <span className="ml-2 rounded bg-bg-raised/60 px-1.5 py-0.5 text-[10px] text-ink-muted">
-                L{c.escalation}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              {c.suppliers.length === 0 && (
-                <span className="text-[11px] text-risk-medium">no suppliers mapped</span>
-              )}
-              {c.suppliers.map((cs) => (
+        <ul className="divide-y divide-rule">
+          {contacts.map((c) => (
+            <li key={c.id} className="grid items-start gap-4 py-4 md:grid-cols-[1fr_1fr_1fr_auto]">
+              <div className="flex items-center gap-3">
                 <span
-                  key={cs.supplierId}
-                  className="inline-flex items-center gap-1 rounded-md border border-line bg-bg-raised/40 px-2 py-0.5 text-[11px] text-ink-muted"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-raised text-xs font-semibold text-ink"
+                  aria-hidden
                 >
-                  <Building2 className="h-2.5 w-2.5" /> {cs.supplier.name}
+                  {c.name
+                    .split(" ")
+                    .map((p) => p[0])
+                    .slice(0, 2)
+                    .join("")}
                 </span>
-              ))}
-            </div>
-
-            <div className="ml-auto">
+                <div>
+                  <div className="text-sm font-medium text-ink">{c.name}</div>
+                  <div className="text-xs text-ink-soft">
+                    {c.role}, level {c.escalation}
+                  </div>
+                </div>
+              </div>
+              <div className="text-sm">
+                <div className="tabular-nums text-ink">{c.phone}</div>
+                {c.email && <div className="text-ink-soft">{c.email}</div>}
+                <div className={c.receiveCalls ? "text-xs text-ink-muted" : "text-xs text-warning"}>
+                  {c.receiveCalls ? "Eureka may call" : "Not dialled"}
+                </div>
+              </div>
+              <div className="text-sm text-ink-soft">
+                {c.suppliers.length === 0 ? (
+                  <span className="text-warning">No suppliers mapped</span>
+                ) : (
+                  c.suppliers.map((cs) => cs.supplier.name).join(", ")
+                )}
+              </div>
               <DeleteContactButton id={c.id} name={c.name} />
-            </div>
-          </div>
-        ))}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

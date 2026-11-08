@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 
-const styles: Record<string, { bar: string; text: string }> = {
-  low: { bar: "bg-risk-low", text: "text-risk-low" },
-  medium: { bar: "bg-risk-medium", text: "text-risk-medium" },
-  high: { bar: "bg-risk-high", text: "text-risk-high" },
-  critical: { bar: "bg-risk-critical", text: "text-risk-critical" },
+const tone: Record<string, string> = {
+  low: "bg-risk-low",
+  medium: "bg-risk-medium",
+  high: "bg-risk-high",
+  critical: "bg-risk-critical",
 };
 
 export function RiskBadge({
@@ -15,17 +15,10 @@ export function RiskBadge({
   className?: string;
 }) {
   const s = severity.toLowerCase();
-  const tone = styles[s] ?? styles.low;
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-chart",
-        tone.text,
-        className,
-      )}
-    >
-      <span className={cn("h-2.5 w-0.5", tone.bar)} aria-hidden />
-      {severity}
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-ink", className)}>
+      <span className={cn("h-2 w-2 rounded-full", tone[s] ?? tone.low)} aria-hidden />
+      {s.charAt(0).toUpperCase() + s.slice(1)}
     </span>
   );
 }
