@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 
 const tone: Record<string, string> = {
-  low: "bg-risk-low",
-  medium: "bg-risk-medium",
-  high: "bg-risk-high",
-  critical: "bg-risk-critical",
+  low: "text-risk-low",
+  medium: "text-risk-medium",
+  high: "text-risk-high",
+  critical: "text-risk-critical",
 };
 
 export function RiskBadge({
@@ -16,8 +16,7 @@ export function RiskBadge({
 }) {
   const s = severity.toLowerCase();
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-ink", className)}>
-      <span className={cn("h-2 w-2 rounded-full", tone[s] ?? tone.low)} aria-hidden />
+    <span className={cn("text-xs font-semibold", tone[s] ?? tone.low, className)}>
       {s.charAt(0).toUpperCase() + s.slice(1)}
     </span>
   );

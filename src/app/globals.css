@@ -111,13 +111,6 @@ input, select, textarea, button {
   outline-offset: 2px;
 }
 
-/* The live dot breathes by opacity only. */
-@keyframes live {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-.live-dot { animation: live 2.4s ease-in-out infinite; }
-
 /* A row that arrives in a list slides in once. */
 @keyframes arrive {
   from { opacity: 0; transform: translateY(-4px); }
@@ -126,6 +119,6 @@ input, select, textarea, button {
 .arrive { animation: arrive 240ms cubic-bezier(.2, .8, .2, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .live-dot, .arrive { animation: none; }
+  .arrive { animation: none; }
   .btn { transition: none; }
 }

@@ -94,19 +94,22 @@ export function DisruptionRail({
               onClick={() => onSelect(m.alertId, m.lat, m.lng)}
               className="flex w-full items-center gap-2.5 px-4 py-2 text-left transition-colors hover:bg-raised/60"
             >
-              <span
-                className="h-2 w-2 shrink-0 rounded-full"
-                style={{ background: SEVERITY_COLOR[m.severity] ?? SEVERITY_COLOR.low }}
-                aria-hidden
-              />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm text-ink">{m.name}</span>
                 <span className="block truncate text-xs text-ink-muted">
                   {m.country}, {m.categories.slice(0, 2).join(", ")}
                 </span>
               </span>
-              <span className="shrink-0 text-xs tabular-nums text-ink-soft">
-                {lanes.get(m.name) ?? 0} lane{(lanes.get(m.name) ?? 0) === 1 ? "" : "s"}
+              <span className="shrink-0 text-right text-xs">
+                <span
+                  className="block font-semibold"
+                  style={{ color: SEVERITY_COLOR[m.severity] ?? SEVERITY_COLOR.low }}
+                >
+                  {m.severity.charAt(0).toUpperCase() + m.severity.slice(1)}
+                </span>
+                <span className="block tabular-nums text-ink-soft">
+                  {lanes.get(m.name) ?? 0} lane{(lanes.get(m.name) ?? 0) === 1 ? "" : "s"}
+                </span>
               </span>
             </button>
           </li>

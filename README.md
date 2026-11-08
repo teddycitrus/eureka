@@ -240,7 +240,7 @@ npm install npm@latest -g
 
 **Globe view**
 
-The home screen renders a live 3D globe of the Earth at night, in greyscale, so the only colour on it is data: suppliers are coloured by risk, lanes by status, and a lane Eureka rerouted turns blue. Suppliers with an open alert carry a name tag. Click a tag, a supplier or a disruption to fly the globe to it and select the matching risk in the Operations window, where the on-call manager is one click away. Four windows (Disruptions, Operations, Network, Hear a briefing) can be dragged, resized, minimized and maximized; on narrow screens they stack under the globe. Add `?sample` to the URL to skip the FourKites connect dialog.
+The home screen renders a live 3D globe (NASA Blue Marble). Suppliers are coloured by risk, lanes by status, and a lane Eureka rerouted turns blue. Suppliers with an open alert carry a name tag with their risk level. Click a tag, a supplier or a disruption to fly the globe to it and select the matching risk in the Operations window, where the on-call manager is one click away. Four windows (Disruptions, Operations, Network, Hear a briefing) can be dragged, resized, minimized and maximized; on narrow screens they stack under the globe. Add `?sample` to the URL to skip the FourKites connect dialog.
 
 **Voice query**
 

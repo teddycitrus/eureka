@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Globe from "react-globe.gl";
-import { MeshBasicMaterial } from "three";
 import { LANE_COLOR, SEVERITY_COLOR } from "./colors";
 import type { GlobeSnapshot } from "./types";
 
@@ -27,21 +26,6 @@ type LooseGlobe = {
 const TIP =
   "font-family:inherit;padding:8px 10px;background:#131217;border:1px solid #2a292e;border-radius:6px;color:#f2f2f3;font-size:12px;line-height:16px";
 
-// The Black Marble night texture shows where industry is lit. It is drawn
-// unlit and in greyscale so the only colour on the globe is the data.
-function nightMaterial() {
-  const m = new MeshBasicMaterial({ color: 0xffffff });
-  m.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <map_fragment>",
-      `#include <map_fragment>
-       float g = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-       diffuseColor.rgb = vec3(0.004) + vec3(g) * 1.25;`,
-    );
-  };
-  return m;
-}
-
 export function GlobeView({
   snapshot,
   focus,
@@ -58,7 +42,6 @@ export function GlobeView({
   const containerRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<LooseGlobe | null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const material = useMemo(() => nightMaterial(), []);
 
   // Track container dimensions for the globe canvas.
   useEffect(() => {
@@ -161,8 +144,8 @@ export function GlobeView({
         width={size.w}
         height={size.h}
         backgroundColor="rgba(0,0,0,0)"
-        globeImageUrl="/earth-night.jpg"
-        globeMaterial={material}
+        globeImageUrl="/earth-blue-marble.jpg"
+        bumpImageUrl="/earth-topology.png"
         showAtmosphere={false}
         // Suppliers as columns; the ones carrying an open alert stand taller.
         pointsData={points}
@@ -174,9 +157,9 @@ export function GlobeView({
         pointLabel={(d: object) => {
           const m = d as P;
           const sev = m.severity.charAt(0).toUpperCase() + m.severity.slice(1);
-          return `<div style="${TIP}"><div style="font-weight:600">${m.name}</div><div style="color:#bdbdc0">${m.country}, ${m.region}</div><div style="margin-top:4px;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${
+          return `<div style="${TIP}"><div style="font-weight:600">${m.name}</div><div style="color:#bdbdc0">${m.country}, ${m.region}</div><div style="margin-top:4px;font-weight:600;color:${
             SEVERITY_COLOR[m.severity] ?? SEVERITY_COLOR.low
-          }"></span>${sev} risk${m.hasAlert ? ", open alert" : ""}</div></div>`;
+          }">${sev} risk${m.hasAlert ? ", open alert" : ""}</div></div>`;
         }}
         onPointClick={(d: object) => {
           const m = d as P;
@@ -241,12 +224,10 @@ export function GlobeView({
           className="absolute left-0 top-0 flex items-center gap-1.5 whitespace-nowrap rounded border border-line bg-surface px-2 py-0.5 text-xs font-medium text-ink opacity-0 transition-[opacity,border-color] duration-200 hover:border-ink-muted"
           style={{ borderColor: m.alertId === selectedAlertId ? "rgb(var(--accent))" : undefined }}
         >
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ background: SEVERITY_COLOR[m.severity] ?? SEVERITY_COLOR.low }}
-            aria-hidden
-          />
           {m.name}
+          <span style={{ color: SEVERITY_COLOR[m.severity] ?? SEVERITY_COLOR.low }}>
+            {m.severity.charAt(0).toUpperCase() + m.severity.slice(1)}
+          </span>
         </button>
       ))}
     </div>

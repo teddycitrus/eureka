@@ -211,11 +211,8 @@ export function LanesView() {
           {snap ? finding(stats) : "Reading the network"}
         </p>
         <div className="ml-auto flex items-center gap-4 text-xs text-ink-muted">
-          <span className="hidden items-center gap-2 sm:inline-flex">
-            <span className="live-dot h-1.5 w-1.5 rounded-full bg-positive" aria-hidden />
-            <span className="tabular-nums">
-              {updatedAt ? `Live, updated ${clock(updatedAt)}` : "Live"}
-            </span>
+          <span className="hidden tabular-nums sm:inline">
+            {updatedAt ? `Live, updated ${clock(updatedAt)}` : "Live"}
           </span>
           <FkStatus
             status={fkStatus}
@@ -381,12 +378,14 @@ function Legend({ className, style }: { className?: string; style?: React.CSSPro
       style={style}
       className={`pointer-events-none absolute flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft ${className ?? ""}`}
     >
-      {sev.map(([k, label]) => (
-        <span key={k} className="inline-flex items-center gap-1.5 whitespace-nowrap">
-          <span className="h-2 w-2 rounded-full" style={{ background: SEVERITY_COLOR[k] }} />
-          {label}
-        </span>
-      ))}
+      <span className="whitespace-nowrap">
+        Supplier risk{" "}
+        {sev.map(([k, label]) => (
+          <span key={k} className="ml-2 font-semibold" style={{ color: SEVERITY_COLOR[k] }}>
+            {label}
+          </span>
+        ))}
+      </span>
       <span className="h-3 w-px bg-line" aria-hidden />
       {lanes.map(([k, label]) => (
         <span key={k} className="inline-flex items-center gap-1.5 whitespace-nowrap">
